@@ -1,0 +1,13 @@
+id_atleta;data;peso_kg;sesso;distretto;lato_leso;lato;prova_1_kg;prova_2_kg;prova_3_kg;posizione;dolore_0_10;note
+R01;2026-09-17;86;M;quad;dx;dx;18,6;19,2;19,0;Seduto, ginocchio a 60°, cinghia sopra i malleoli;3;
+R01;2026-09-17;86;M;quad;dx;sx;28,4;28,0;28,2;Seduto, ginocchio a 60°, cinghia sopra i malleoli;0;
+R01;2026-09-17;86;M;add;;bil;33,5;34,0;;Supino, anche e ginocchia a 45°, spinta bilaterale;0;
+R01;2026-10-01;85;M;quad;dx;dx;21,0;20,6;;Seduto, ginocchio a 60°, cinghia sopra i malleoli;2;
+R01;2026-10-01;85;M;quad;dx;sx;29,0;28,7;;Seduto, ginocchio a 60°, cinghia sopra i malleoli;0;
+R01;2026-10-01;85;M;ham;dx;dx;16,0;15,8;;Prono, ginocchio a 30°, cinghia sopra i malleoli;0;
+R01;2026-10-01;85;M;ham;dx;sx;19,0;19,4;;Prono, ginocchio a 30°, cinghia sopra i malleoli;0;
+R01;2026-10-01;85;M;add;;bil;34,0;33,2;;Supino, anche e ginocchia a 45°, spinta bilaterale;0;
+R02;2026-10-08;98;M;er;sx;sx;15,2;16,0;;Abduzione 45° nel piano scapolare, gomito a 90°;1;post-lussazione
+R02;2026-10-08;98;M;er;sx;dx;19,5;19,0;;Abduzione 45° nel piano scapolare, gomito a 90°;0;
+R02;2026-10-08;98;M;ir;sx;sx;20,0;21,2;;Abduzione 45° nel piano scapolare, gomito a 90°;1;
+R02;2026-10-08;98;M;ir;sx;dx;23,0;23,4;;Abduzione 45° nel piano scapolare, gomito a 90°;0;
