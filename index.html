@@ -81,14 +81,6 @@ button.primary{background:var(--accent);border-color:var(--accent);color:var(--a
 .prev{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:end}
 
 /* Risultati */
-.results{display:flex;flex-direction:column}
-.res{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
-.res:last-child{border-bottom:0}
-.res-k{font-size:.92rem;color:var(--muted)}
-.res-k b{color:var(--ink);font-weight:600}
-.res-v{font-family:var(--f-display);font-size:1.9rem;font-weight:600;line-height:1;font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
-.res-v small{font-family:var(--f-body);font-size:.88rem;font-weight:500;color:var(--muted);margin-left:3px}
-.res.hi .res-v{color:var(--accent)}
 .empty{font-size:.92rem;color:var(--muted);border:1px dashed var(--line);border-radius:10px;padding:14px}
 
 .bar{position:relative;height:10px;border-radius:999px;background:var(--sunk)}
@@ -112,6 +104,33 @@ button.primary{background:var(--accent);border-color:var(--accent);color:var(--a
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .item-d{font-family:var(--f-mono);font-size:.75rem;color:var(--muted);font-variant-numeric:tabular-nums}
 .note{font-size:.76rem;color:var(--muted)}
+.chip{font-size:.78rem;font-weight:600;padding:3px 9px;border-radius:999px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.chip.ok{background:var(--ok-soft);color:var(--ok)}
+.chip.warn{background:var(--warn-soft);color:var(--warn)}
+.chip.bad{background:var(--bad-soft);color:var(--bad)}
+.chip.neu{background:var(--sunk);color:var(--muted)}
+
+/* Riepilogo colorato sotto le prove */
+.tbl{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) minmax(0,1fr);gap:6px;align-items:stretch}
+.tbl .th{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:center;align-self:end}
+.tbl .tk{font-size:.86rem;color:var(--muted);align-self:center;line-height:1.25}
+.tbl .tk b{color:var(--ink);font-weight:600;display:block}
+.cell{border-radius:8px;padding:8px 6px;text-align:center;background:var(--sunk);font-family:var(--f-display);font-size:1.55rem;font-weight:600;line-height:1.05;font-variant-numeric:tabular-nums;min-width:0}
+.cell small{display:block;font-family:var(--f-body);font-size:.72rem;font-weight:500;color:var(--muted);margin-top:2px}
+.cell.ok{background:var(--ok-soft);color:var(--ok)}
+.cell.warn{background:var(--warn-soft);color:var(--warn)}
+.cell.bad{background:var(--bad-soft);color:var(--bad)}
+.cell.wide{grid-column:span 2}
+.legend{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:.76rem;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+
+/* Visita precedente */
+.delta{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.delta:last-of-type{border-bottom:0}
+.delta-k{font-weight:600}
+.delta-v{font-family:var(--f-mono);font-size:.8rem;color:var(--muted);grid-column:1}
+.delta .chip{grid-row:1 / span 2;grid-column:2}
+.sec-h{display:flex;flex-direction:column;gap:2px}
 .flag{border-left:3px solid var(--warn);background:var(--warn-soft);color:var(--ink);padding:9px 12px;border-radius:0 8px 8px 0;font-size:.86rem}
 .flag.bad{border-color:var(--bad);background:var(--bad-soft)}
 
@@ -125,7 +144,7 @@ details ol{padding-left:18px;margin:8px 0 0;display:flex;flex-direction:column;g
 
 <div class="wrap">
   <header>
-    <span class="eyebrow">Strumento clinico · v0.6</span>
+    <span class="eyebrow">Strumento clinico · v0.7</span>
     <h1>Dinamometria isometrica</h1>
     <p class="muted">Valori in <b style="color:var(--ok)">verde</b>: target raggiunto o nel riferimento. <b style="color:var(--warn)">Giallo</b>: tra soglia e target o sotto il riferimento. <b style="color:var(--bad)">Rosso</b>: sotto soglia. Soglie del manuale non validate; riferimenti di letteratura: medie di atleti sani. I dati restano nel browser finché non salvi il registro CSV.</p>
   </header>
@@ -156,9 +175,13 @@ details ol{padding-left:18px;margin:8px 0 0;display:flex;flex-direction:column;g
       </div>
       <button type="button" id="btnClear">Nuovo paziente</button>
     </div>
-    <div class="row-btns" id="exampleRow">
-      <span class="pill">Dati di esempio</span>
-      <span class="muted">Premi "Nuovo paziente" per iniziare.</span>
+    <div class="field">
+      <span class="lab" id="agg-l">Valore usato per i calcoli</span>
+      <div class="seg" role="radiogroup" aria-labelledby="agg-l">
+        <input type="radio" name="agg" id="aggMean" value="media" checked><label for="aggMean">Media prove</label>
+        <input type="radio" name="agg" id="aggPeak" value="picco"><label for="aggPeak">Picco</label>
+      </div>
+      <p class="note">Forza relativa, LSI e deficit si calcolano su questo valore. Le soglie del manuale sono pensate sul picco.</p>
     </div>
   </section>
 
@@ -294,6 +317,7 @@ const calc = {
   defKg:(l,s)=> s-l,
   defPct:(l,s)=> (s-l)/s*100,
   peak: arr => { const v = arr.filter(Number.isFinite); return v.length ? Math.max(...v) : NaN; },
+  mean: arr => { const v = arr.filter(Number.isFinite); return v.length ? v.reduce((a,b)=>a+b,0)/v.length : NaN; },
   cv(arr){ const v = arr.filter(Number.isFinite); if(v.length<2) return NaN;
     const m = v.reduce((a,b)=>a+b,0)/v.length; if(m<=0) return NaN;
     const sd = Math.sqrt(v.reduce((a,b)=>a+(b-m)**2,0)/(v.length-1)); return sd/m*100; },
@@ -325,24 +349,19 @@ const itDate = iso => /^\d{4}-\d{2}-\d{2}$/.test(iso) ? iso.split("-").reverse()
 const blankD = d => d.lateral
   ? {side:"dx", l:["","",""], s:["","",""], lp:"", sp:"", lpain:"", spain:"", pos:""}
   : {v:["","",""], base:"", vpain:"", pos:""};
-const blank = () => ({id:"", date:today(), weight:"", sex:"M", d:Object.fromEntries(DISTRICTS.map(d=>[d.id, blankD(d)]))});
+const blank = () => ({id:"", date:today(), weight:"", sex:"M", agg:"media", d:Object.fromEntries(DISTRICTS.map(d=>[d.id, blankD(d)]))});
 let state = blank();
 let current = "quad";
-function example(){
-  const s = blank(); s.weight = "85"; s.id = "R01";
-  Object.assign(s.d.quad, {l:["23,1","24,0","22,8"], s:["29,5","28,9","29,2"], lp:"21,0", sp:"29,0", lpain:"2"});
-  Object.assign(s.d.ham,  {l:["17,0","16,4",""], s:["19,5","19,1",""]});
-  Object.assign(s.d.add,  {v:["30,0","29,4",""], base:"34,0"});
-  Object.assign(s.d.er,   {l:["16,5","",""], s:["18,0","",""]});
-  Object.assign(s.d.ir,   {l:["19,0","",""], s:["21,0","",""]});
-  return s;
-}
-/* valori numerici di un distretto */
+/* Valore usato per i calcoli: media delle prove oppure picco */
+const agg = arr => state.agg==="picco" ? calc.peak(arr) : calc.mean(arr);
+const aggName = () => state.agg==="picco" ? "picco" : "media";
+/* valori numerici di un distretto: l, s, peak (bilaterale) sono il valore scelto (media o picco) */
 function vals(id){
   const x = state.d[id], d = DISTRICTS.find(q=>q.id===id);
-  if(!d.lateral){ const t = x.v.map(num); return {peak:calc.peak(t), cv:calc.cv(t), n:t.filter(Number.isFinite).length, base:num(x.base)}; }
+  if(!d.lateral){ const t = x.v.map(num); return {peak:agg(t), max:calc.peak(t), avg:calc.mean(t), cv:calc.cv(t), n:t.filter(Number.isFinite).length, base:num(x.base)}; }
   const lt = x.l.map(num), st = x.s.map(num);
-  return {side:x.side, l:calc.peak(lt), s:calc.peak(st), lcv:calc.cv(lt), scv:calc.cv(st),
+  return {side:x.side, l:agg(lt), s:agg(st), lmax:calc.peak(lt), smax:calc.peak(st), lavg:calc.mean(lt), savg:calc.mean(st),
+    lcv:calc.cv(lt), scv:calc.cv(st),
     ln:lt.filter(Number.isFinite).length, sn:st.filter(Number.isFinite).length, lp:num(x.lp), sp:num(x.sp)};
 }
 function filled(id){ const v = vals(id); return Number.isFinite(v.l) || Number.isFinite(v.s) || Number.isFinite(v.peak); }
@@ -378,7 +397,7 @@ function toCSV(rows){
   return "﻿" + [COLS.join(";"), ...rows.map(r=>COLS.map(c=>esc(String(r[c] ?? ""))).join(";"))].join("\r\n") + "\r\n";
 }
 const csvNum = s => { const n = num(s); return Number.isFinite(n) ? String(n).replace(".",",") : ""; };
-const rowPeak = r => calc.peak([r.prova_1_kg, r.prova_2_kg, r.prova_3_kg].map(num));
+const rowVal = r => agg([r.prova_1_kg, r.prova_2_kg, r.prova_3_kg].map(num));
 
 /* Righe del registro per la seduta corrente */
 function sessionRows(){
@@ -401,7 +420,7 @@ function history(id, dist, before){
   const by = {};
   registry.filter(r=>r.id_atleta===id && r.distretto===dist && (!before || r.data < before)).forEach(r=>{
     const h = by[r.data] || (by[r.data] = {date:r.data, leso:r.lato_leso, l:NaN, s:NaN, bil:NaN});
-    const p = rowPeak(r);
+    const p = rowVal(r);
     if(r.lato==="bil") h.bil = p;
     else if(r.lato_leso && r.lato===r.lato_leso) h.l = p;
     else { h.s = p; if(r.lato_leso) h.leso = r.lato_leso; }
@@ -413,7 +432,7 @@ function loadAthlete(id){
   const rows = registry.filter(r=>r.id_atleta===id);
   if(!rows.length) return false;
   const last = rows.reduce((a,b)=> b.data > a.data ? b : a);
-  const s = blank(); s.id = id; s.weight = last.peso_kg; s.sex = last.sesso==="F" ? "F" : "M";
+  const s = blank(); s.agg = state.agg; s.id = id; s.weight = last.peso_kg; s.sex = last.sesso==="F" ? "F" : "M";
   state = s;
   DISTRICTS.forEach(d=>{
     const h = history(id, d.id, state.date), p = h[h.length-1]; if(!p) return;
@@ -512,16 +531,10 @@ function updateLimbTitles(){
 function syncPatient(){
   $("#athId").value = state.id; $("#date").value = state.date; $("#weight").value = state.weight;
   document.getElementById(state.sex==="F"?"sexF":"sexM").checked = true;
+  document.getElementById(state.agg==="picco"?"aggPeak":"aggMean").checked = true;
 }
 
 /* ---------- Mattoni dei risultati ---------- */
-function res(k, v, u, hi){
-  const r = el("div","res"+(hi?" hi":""));
-  const kk = el("span","res-k"); kk.append(...k); r.appendChild(kk);
-  const vv = el("span","res-v",v); if(u) vv.appendChild(el("small",null,u)); r.appendChild(vv);
-  return r;
-}
-function lbl(main, sub){ const b=el("b",null,main); return sub ? [b, document.createTextNode(" "+sub)] : [b]; }
 function item(k, d, st){
   const it = el("div","item"); const top = el("div","item-top");
   const kk = el("span","item-k"+(st && st.cls!=="neu" ? " "+st.cls : ""),k);
@@ -534,23 +547,79 @@ function col(title, tag){
   h.appendChild(el("span","col-t",title)); if(tag) h.appendChild(el("span","tag",tag));
   c.appendChild(h); return c;
 }
-function peakLabel(key, peak, cv, n){
+function peakLabel(key, avg, max, cv, n){
   const p = $("#peak-"+key); if(!p) return;
   p.replaceChildren();
-  if(!Number.isFinite(peak)){ p.textContent = "picco –"; return; }
-  p.append("picco ", el("b",null,fmt(peak,1)+" kg"));
+  if(!Number.isFinite(max)){ p.textContent = "media – · picco –"; return; }
+  p.append("media ", el("b",null,fmt(avg,1)+" kg"), " · picco ", el("b",null,fmt(max,1)+" kg"));
   if(n>=2) p.append(` · CV ${fmt(cv,1)}%`);
 }
-function litCol(ref, rows, noLitTxt){
-  if(!ref){ const c = col("Letteratura"); c.appendChild(el("p","note",noLitTxt)); return c; }
-  const c = col("Letteratura", ref.cite);
-  const u = ref.kind==="rel" ? "kgf/kg" : "kg", dd = ref.kind==="rel" ? 2 : 1;
-  const rt = ref.lo!=null ? `media ${fmt(ref.mean,dd)} (${fmt(ref.lo,dd)}–${fmt(ref.hi,dd)}) ${u}` : `media ${fmt(ref.mean,dd)} ${u}`;
-  rows.forEach((r,i)=>{
-    const v = ref.kind==="rel" ? r.rel : r.kg;
-    if(Number.isFinite(v)) c.appendChild(item(`${r.name} ${fmt(v/ref.mean*100,0)}% della media`, i===0||!rows[0].has ? rt : null, calc.lit(v,ref)));
+/* ---------- Colori del riepilogo ----------
+   Forza relativa: soglie del manuale se esistono, altrimenti l'intervallo di letteratura.
+   Forza assoluta: soglia del manuale in kg (quadricipite) o riferimento di letteratura in kg.
+   LSI e deficit: cut-off 90% (deficit ≤ 10%). */
+function relStatus(id, rel){
+  if(!Number.isFinite(rel)) return null;
+  const m = MAN[id]; if(m) return calc.man(rel, m);
+  const ref = litRef(id, state.sex);
+  return ref && ref.kind==="rel" ? calc.lit(rel, ref) : null;
+}
+function kgStatus(id, kg){
+  if(!Number.isFinite(kg)) return null;
+  const m = MAN[id]; if(m && m.absMin!=null) return kg < m.absMin ? {cls:"bad", txt:`Sotto ${m.absMin} kg`} : {cls:"ok", txt:`Sopra ${m.absMin} kg`};
+  const ref = litRef(id, state.sex);
+  return ref && ref.kind==="abs" ? calc.lit(kg, ref) : null;
+}
+const lsiStatus = lsi => r2(lsi)>=LSI_CUT ? {cls:"ok", txt:`≥ ${LSI_CUT}%`} : {cls:"bad", txt:`Sotto ${LSI_CUT}%`};
+const defStatus = pct => r2(pct)<=100-LSI_CUT ? {cls:"ok", txt:`≤ ${100-LSI_CUT}%`} : {cls:"bad", txt:`Oltre ${100-LSI_CUT}%`};
+
+function cell(v, u, st, wide){
+  const c = el("div","cell"+(st && st.cls!=="neu" ? " "+st.cls : "")+(wide?" wide":""), v);
+  if(u) c.appendChild(el("small",null,u));
+  if(st){ c.appendChild(el("span","sr"," ("+st.txt+")")); c.title = st.txt; }
+  return c;
+}
+function tk(main, sub){ const t = el("div","tk"); t.appendChild(el("b",null,main)); if(sub) t.append(sub); return t; }
+function legend(){
+  const l = el("div","legend");
+  [["ok","buono / target raggiunto"],["warn","tra soglia e target"],["bad","deficitario"]].forEach(([c,t])=>{
+    const s = el("span"); const i = el("i"); i.style.background = `var(--${c})`; s.append(i, t); l.appendChild(s);
   });
-  c.appendChild(el("p","note",ref.label));
+  return l;
+}
+function secHead(title, text){
+  const h = el("div","sec-h"); h.appendChild(el("h3",null,title)); if(text) h.appendChild(el("p","note",text)); return h;
+}
+
+/* Variazione rispetto alla visita precedente, con freccia e colore */
+function delta(label, before, after, unit, dec, pct){
+  const r = el("div","delta");
+  const d = after - before, rel = before ? d/before*100 : NaN;
+  r.appendChild(el("span","delta-k",label));
+  /* variazioni minime (< 2% della forza o < 1 punto di LSI) restano grigie: sono dentro l'errore di misura */
+  const flat = pct ? Math.abs(rel) < 2 : Math.abs(d) < 1;
+  const arrow = flat ? "≈" : d>0 ? "▲" : "▼";
+  const cls = flat ? "neu" : d>0 ? "ok" : "bad";
+  const txt = `${arrow} ${sgn(d,dec)} ${unit}` + (pct && Number.isFinite(rel) ? ` (${sgn(rel)}%)` : "");
+  const ch = el("span","chip "+cls, txt); r.appendChild(ch);
+  r.appendChild(el("span","delta-v",`prima ${fmt(before,dec)} ${unit} → oggi ${fmt(after,dec)} ${unit}`));
+  return r;
+}
+
+/* Colonna letteratura: valore del paziente rispetto alla media di un gruppo di atleti sani */
+function litCol(ref, rows, noLitTxt){
+  if(!ref){ const c = col("Atleti sani in letteratura"); c.appendChild(el("p","note",noLitTxt)); return c; }
+  const c = col("Atleti sani in letteratura", ref.cite);
+  const u = ref.kind==="rel" ? "kgf/kg" : "kg", dd = ref.kind==="rel" ? 2 : 1;
+  c.appendChild(el("p","note", ref.kind==="rel"
+    ? "Confronta la forza relativa del paziente con la media del gruppo di riferimento. 100% = uguale alla media."
+    : "Confronta la forza assoluta (kg) del paziente con la media del gruppo di riferimento. 100% = uguale alla media."));
+  const rt = `media del gruppo ${fmt(ref.mean,dd)} ${u}` + (ref.lo!=null ? ` (intervallo ${fmt(ref.lo,dd)}–${fmt(ref.hi,dd)})` : "");
+  rows.forEach(r=>{
+    const v = ref.kind==="rel" ? r.rel : r.kg;
+    if(Number.isFinite(v)) c.appendChild(item(`${r.name}: ${fmt(v/ref.mean*100,0)}% della media`, `paziente ${fmt(v,dd)} ${u} · ${rt}`, calc.lit(v,ref)));
+  });
+  c.appendChild(el("p","note","Gruppo di riferimento: " + ref.label));
   return c;
 }
 
@@ -558,11 +627,11 @@ function litCol(ref, rows, noLitTxt){
 function renderHistory(d, out){
   const id = state.id.trim(); if(!id || !registry.length) return;
   const h = history(id, d.id, state.date); if(!h.length) return;
-  const c = col("Storico dal registro", `${h.length} sedute`);
+  const c = col("Storico dal registro", `${h.length} sedute · ${aggName()}`);
   h.slice(-6).forEach(p=>{
     if(d.lateral){
       const lsi = Number.isFinite(p.l) && Number.isFinite(p.s) && p.s>0 ? calc.lsi(p.l,p.s) : NaN;
-      c.appendChild(item(`${itDate(p.date)} · LSI ${fmt(lsi,1)}%`, `leso ${fmt(p.l,1)} kg · sano ${fmt(p.s,1)} kg`, null));
+      c.appendChild(item(`${itDate(p.date)} · LSI ${fmt(lsi,1)}%`, `leso ${fmt(p.l,1)} kg · sano ${fmt(p.s,1)} kg`, Number.isFinite(lsi) ? lsiStatus(lsi) : null));
     } else c.appendChild(item(`${itDate(p.date)} · ${fmt(p.bil,1)} kg`, null, null));
   });
   if(h.length>6) c.appendChild(el("p","note","Mostro le ultime 6 sedute; le altre sono nel CSV."));
@@ -573,60 +642,81 @@ function renderHistory(d, out){
 function renderLateral(d, w, out){
   const v = vals(d.id), m = MAN[d.id], ref = litRef(d.id, state.sex);
   const side = v.side==="dx"?"Dx":"Sx", other = v.side==="dx"?"Sx":"Dx";
-  peakLabel("l", v.l, v.lcv, v.ln); peakLabel("s", v.s, v.scv, v.sn);
+  peakLabel("l", v.lavg, v.lmax, v.lcv, v.ln); peakLabel("s", v.savg, v.smax, v.scv, v.sn);
   const hasL = Number.isFinite(v.l), hasS = Number.isFinite(v.s);
-  if(!hasL && !hasS){ out.appendChild(el("p","empty","Inserisci almeno una prova: l'app usa il picco, come previsto dal manuale.")); return; }
+  if(!hasL && !hasS){ out.appendChild(el("p","empty","Inserisci almeno una prova per vedere i risultati.")); return; }
   const relL = calc.rel(v.l,w), relS = calc.rel(v.s,w);
-  const hasLsi = hasL && hasS && v.s>0, lsi = hasLsi ? calc.lsi(v.l,v.s) : NaN, hasDef = hasLsi && v.s>v.l;
+  const hasLsi = hasL && hasS && v.s>0, lsi = hasLsi ? calc.lsi(v.l,v.s) : NaN;
+  const defKg = hasLsi ? Math.max(calc.defKg(v.l,v.s),0) : NaN, defPct = hasLsi ? Math.max(calc.defPct(v.l,v.s),0) : NaN;
+  const A = aggName(), Acap = A==="media" ? "Media" : "Picco";
 
-  const list = el("div","results");
-  list.appendChild(res(lbl("Forza relativa leso", side), hasL?fmt(relL):"–", "kgf/kg"));
-  list.appendChild(res(lbl("Forza relativa sano", other), hasS?fmt(relS):"–", "kgf/kg"));
-  list.appendChild(res(lbl("LSI"), hasLsi?fmt(lsi,1):"–", "%", true));
-  list.appendChild(res(lbl("Deficit"), hasDef?fmt(calc.defKg(v.l,v.s),1):(hasLsi?"0,0":"–"), hasDef?`kg · ${fmt(calc.defPct(v.l,v.s),1)} %`:(hasLsi?"kg · leso ≥ sano":"kg")));
-  out.appendChild(list);
+  /* Riepilogo colorato */
+  out.appendChild(secHead("Risultati", `Calcolati sulla ${A==="media"?"media delle prove":"prova migliore (picco)"}. Il colore indica il confronto con la soglia.`));
+  const t = el("div","tbl");
+  t.append(el("span"), el("span","th",`Leso · ${side}`), el("span","th",`Sano · ${other}`));
+  t.append(tk(`${Acap} forza`, "assoluta"), cell(hasL?fmt(v.l,1):"–","kg",kgStatus(d.id,v.l)), cell(hasS?fmt(v.s,1):"–","kg",kgStatus(d.id,v.s)));
+  t.append(tk("Forza relativa", "forza ÷ peso"), cell(hasL?fmt(relL):"–","kgf/kg",relStatus(d.id,relL)), cell(hasS?fmt(relS):"–","kgf/kg",relStatus(d.id,relS)));
+  t.append(tk("LSI", "leso ÷ sano"), cell(hasLsi?fmt(lsi,1):"–","%",hasLsi?lsiStatus(lsi):null,true));
+  t.append(tk("Deficit", "quanto manca al leso"), cell(hasLsi?fmt(defKg,1):"–","kg",hasLsi?defStatus(defPct):null), cell(hasLsi?fmt(defPct,1):"–","%",hasLsi?defStatus(defPct):null));
+  out.appendChild(t);
+  out.appendChild(legend());
+  const why = [];
+  if(m) why.push(`Forza relativa: soglia ${m.min!=null?fmt(m.min)+" e ":""}target ${fmt(m.target)} kgf/kg del manuale.`);
+  else if(ref && ref.kind==="rel" && ref.lo!=null) why.push(`Forza relativa: intervallo di atleti sani (${ref.cite}), il manuale non ha soglie.`);
+  else why.push("Forza relativa: nessuna soglia disponibile per questo distretto, resta grigia.");
+  if(m && m.absMin!=null) why.push(`Forza assoluta: ${m.absMin} kg minimi sul lato leso (manuale).`);
+  else if(ref && ref.kind==="abs") why.push(`Forza assoluta: intervallo di atleti sani (${ref.cite}).`);
+  why.push(`LSI verde da ${LSI_CUT}% in su; deficit verde fino al ${100-LSI_CUT}%.`);
+  out.appendChild(el("p","note",why.join(" ")));
 
   /* Confronto con la visita precedente */
   const hasLp = Number.isFinite(v.lp) && hasL, hasSp = Number.isFinite(v.sp) && hasS;
   const prevLsi = Number.isFinite(v.lp) && Number.isFinite(v.sp) && v.sp>0 ? calc.lsi(v.lp,v.sp) : NaN;
   if(hasLp || hasSp){
     const c = col("Rispetto alla visita precedente");
-    if(hasLp) c.appendChild(item(`Leso ${sgn(v.l-v.lp)} kg (${sgn((v.l-v.lp)/v.lp*100)}%)`, `prima ${fmt(v.lp,1)} kg, oggi ${fmt(v.l,1)} kg`, null));
-    if(hasSp) c.appendChild(item(`Sano ${sgn(v.s-v.sp)} kg (${sgn((v.s-v.sp)/v.sp*100)}%)`, `prima ${fmt(v.sp,1)} kg, oggi ${fmt(v.s,1)} kg`, null));
-    if(Number.isFinite(prevLsi) && hasLsi) c.appendChild(item(`LSI ${sgn(lsi-prevLsi)} punti`, `prima ${fmt(prevLsi,1)}%, oggi ${fmt(lsi,1)}%`, null));
+    if(Number.isFinite(prevLsi) && hasLsi){
+      const gap = LSI_CUT - lsi;
+      c.appendChild(el("p",null, lsi>prevLsi+0.05
+        ? `L'LSI è salito da ${fmt(prevLsi,0)}% a ${fmt(lsi,0)}%. ` + (gap>0 ? `Mancano ${fmt(gap,0)} punti al ${LSI_CUT}%.` : `Ha superato il ${LSI_CUT}%.`)
+        : lsi<prevLsi-0.05 ? `L'LSI è sceso da ${fmt(prevLsi,0)}% a ${fmt(lsi,0)}%.` : `L'LSI è stabile a ${fmt(lsi,0)}%.`));
+      c.appendChild(delta("LSI", prevLsi, lsi, "punti", 1, false));
+    }
+    if(hasLp) c.appendChild(delta(`Lato leso · ${side}`, v.lp, v.l, "kg", 1, true));
+    if(hasSp) c.appendChild(delta(`Lato sano · ${other}`, v.sp, v.s, "kg", 1, true));
     if(hasLp && hasSp && v.s - v.sp > 0.1*v.sp) c.appendChild(el("p","note","Anche il lato sano è cresciuto di oltre il 10%: parte del cambiamento dell'LSI dipende dal lato sano (Moran 2022)."));
+    if(hasLsi){
+      const wrap = el("div"), bar = el("div","bar"), max = 120;
+      const f = el("div","bar-fill"); f.style.width = Math.max(0,Math.min(lsi,max))/max*100+"%";
+      f.style.background = r2(lsi)>=LSI_CUT ? "var(--ok)" : "var(--bad)";
+      const mk = el("div","bar-mark"); mk.style.left = LSI_CUT/max*100+"%";
+      bar.append(f, mk);
+      if(Number.isFinite(prevLsi)){ const pv = el("div","bar-prev"); pv.style.left = Math.max(0,Math.min(prevLsi,max))/max*100+"%"; bar.appendChild(pv); }
+      wrap.appendChild(bar);
+      const lg = el("div","bar-legend"); lg.append(el("span",null,"0%"), el("span",null,`linea nera = ${LSI_CUT}%` + (Number.isFinite(prevLsi)?" · grigia = visita prec.":"")), el("span",null,"120%"));
+      wrap.appendChild(lg); c.appendChild(wrap);
+    }
     out.appendChild(c);
   }
   renderHistory(d, out);
 
-  if(hasLsi){
-    const wrap = el("div"), bar = el("div","bar"), max = 120;
-    const f = el("div","bar-fill"); f.style.width = Math.max(0,Math.min(lsi,max))/max*100+"%";
-    f.style.background = r2(lsi)>=LSI_CUT ? "var(--ok)" : "var(--bad)";
-    const mk = el("div","bar-mark"); mk.style.left = LSI_CUT/max*100+"%";
-    bar.append(f, mk);
-    if(Number.isFinite(prevLsi)){ const pv = el("div","bar-prev"); pv.style.left = Math.max(0,Math.min(prevLsi,max))/max*100+"%"; bar.appendChild(pv); }
-    wrap.appendChild(bar);
-    const lg = el("div","bar-legend"); lg.append(el("span",null,"0%"), el("span",null,`cut-off ${LSI_CUT}%` + (Number.isFinite(prevLsi)?" · grigio = visita prec.":"")), el("span",null,"120%"));
-    wrap.appendChild(lg); out.appendChild(wrap);
-  }
-
+  /* Confronto con i riferimenti */
+  out.appendChild(secHead("Confronto con i riferimenti", "A sinistra le soglie cliniche del tuo manuale (obiettivi di riabilitazione). A destra quanto è forte il paziente rispetto ad atleti sani studiati in letteratura."));
   const cmp = el("div","cmp");
   if(m){
-    const cM = col("Manuale","non validato");
-    const thr = (m.min!=null?`soglia ${fmt(m.min)} · `:"") + `target ${fmt(m.target)} kgf/kg`;
-    if(hasL) cM.appendChild(item(`Leso ${fmt(relL)}`, thr, calc.man(relL,m)));
-    if(hasS) cM.appendChild(item(`Sano ${fmt(relS)}`, hasL?null:thr, calc.man(relS,m)));
-    if(hasLsi) cM.appendChild(item(`LSI ${fmt(lsi,1)}%`, `cut-off ${LSI_CUT}% (95% per alto impatto)`, r2(lsi)>=LSI_CUT?{cls:"ok",txt:"Sopra cut-off"}:{cls:"bad",txt:"Sotto cut-off"}));
+    const cM = col("Soglie del manuale","non validate");
+    cM.appendChild(el("p","note",`Forza relativa: sotto ${m.min!=null?fmt(m.min)+" è deficitaria, da "+fmt(m.target):fmt(m.target)} kgf/kg l'obiettivo è raggiunto.`));
+    if(hasL) cM.appendChild(item(`Leso ${fmt(relL)} kgf/kg`, calc.man(relL,m).txt.toLowerCase(), calc.man(relL,m)));
+    if(hasS) cM.appendChild(item(`Sano ${fmt(relS)} kgf/kg`, calc.man(relS,m).txt.toLowerCase(), calc.man(relS,m)));
+    if(hasLsi) cM.appendChild(item(`LSI ${fmt(lsi,1)}%`, `criterio di rientro ≥ ${LSI_CUT}% (95% per sport ad alto impatto)`, lsiStatus(lsi)));
     cmp.appendChild(cM);
   } else {
-    const cM = col("Manuale");
-    cM.appendChild(el("p","note","Il manuale non prevede soglie per questo distretto."));
-    if(hasLsi) cM.appendChild(item(`LSI ${fmt(lsi,1)}%`, `cut-off generico ${LSI_CUT}%`, r2(lsi)>=LSI_CUT?{cls:"ok",txt:"Sopra cut-off"}:{cls:"bad",txt:"Sotto cut-off"}));
+    const cM = col("Soglie del manuale");
+    cM.appendChild(el("p","note","Il manuale non prevede soglie di forza per questo distretto: vale solo il criterio di simmetria."));
+    if(hasLsi) cM.appendChild(item(`LSI ${fmt(lsi,1)}%`, `criterio generico ≥ ${LSI_CUT}%`, lsiStatus(lsi)));
     cmp.appendChild(cM);
   }
-  const cL = litCol(ref, [{name:"Leso", rel:relL, kg:v.l, has:hasL},{name:"Sano", rel:relS, kg:v.s, has:hasS}], NO_LIT[d.id]);
-  if(ref && hasLsi) cL.insertBefore(item("LSI", "≥ 90% è il criterio più usato, non validato come predittore (Lorange 2024)", null), cL.lastChild);
+  const cL = litCol(ref, [{name:"Leso", rel:relL, kg:v.l},{name:"Sano", rel:relS, kg:v.s}], NO_LIT[d.id]);
+  if(ref && hasLsi) cL.insertBefore(el("p","note","LSI ≥ 90% è il criterio più usato, ma non è validato come predittore di re-infortunio (Lorange 2024)."), cL.lastChild);
   cmp.appendChild(cL);
   out.appendChild(cmp);
 
@@ -647,20 +737,31 @@ function renderLateral(d, w, out){
 /* ---------- Adduttori ---------- */
 function renderAdd(w, out){
   const v = vals("add"), m = MAN.add, ref = litRef("add", state.sex);
-  peakLabel("v", v.peak, v.cv, v.n);
+  peakLabel("v", v.avg, v.max, v.cv, v.n);
   if(!Number.isFinite(v.peak)){ out.appendChild(el("p","empty","Test bilaterale: niente LSI. Inserisci almeno una prova e, se la conosci, la baseline del paziente per vedere il calo.")); return; }
   const rel = calc.rel(v.peak,w), hasB = Number.isFinite(v.base) && v.base>0;
   const drop = hasB ? v.base - v.peak : NaN, dropPct = hasB ? drop/v.base*100 : NaN;
-  const list = el("div","results");
-  list.appendChild(res(lbl("Forza relativa"), fmt(rel), "kgf/kg"));
-  list.appendChild(res(lbl("Variazione dalla baseline"), hasB ? sgn(-drop) : "–", hasB ? `kg · ${sgn(-dropPct)} %` : "kg", true));
-  out.appendChild(list);
+  const A = aggName(), Acap = A==="media" ? "Media" : "Picco";
+  out.appendChild(secHead("Risultati", `Calcolati sulla ${A==="media"?"media delle prove":"prova migliore (picco)"}. Test bilaterale: niente LSI, si guarda il calo rispetto alla baseline.`));
+  const t = el("div","tbl");
+  t.style.gridTemplateColumns = "minmax(0,1.1fr) minmax(0,2fr)";
+  t.append(tk(`${Acap} forza`, "assoluta"), cell(fmt(v.peak,1),"kg",kgStatus("add",v.peak)));
+  t.append(tk("Forza relativa", "forza ÷ peso"), cell(fmt(rel),"kgf/kg",calc.man(rel,m)));
+  if(hasB){
+    const st = drop>=3 || dropPct>15 ? {cls:"bad",txt:"Calo rilevante"} : {cls:"ok",txt:"Nessun calo rilevante"};
+    t.append(tk("Rispetto alla baseline", `abituale ${fmt(v.base,1)} kg`), cell(`${sgn(-drop)} kg · ${sgn(-dropPct)}%`, "allarme: calo ≥ 3 kg o > 15%", st));
+  }
+  out.appendChild(t);
+  out.appendChild(legend());
+  out.appendChild(el("p","note",`Forza relativa: soglia ${fmt(m.min)} e target ${fmt(m.target)} kgf/kg del manuale. Forza assoluta: intervallo di atleti sani (${ref.cite}).`));
   renderHistory(DISTRICTS.find(d=>d.id==="add"), out);
+  out.appendChild(secHead("Confronto con i riferimenti", "A sinistra le soglie cliniche del tuo manuale. A destra quanto è forte il paziente rispetto ad atleti sani studiati in letteratura."));
   const cmp = el("div","cmp");
-  const cM = col("Manuale","non validato");
-  cM.appendChild(item(`Squeeze ${fmt(rel)}`, `soglia ${fmt(m.min)} · target ${fmt(m.target)} kgf/kg`, calc.man(rel,m)));
+  const cM = col("Soglie del manuale","non validate");
+  cM.appendChild(el("p","note",`Forza relativa: sotto ${fmt(m.min)} è deficitaria, da ${fmt(m.target)} kgf/kg l'obiettivo è raggiunto. Un calo di 3 kg o più dalla baseline è un campanello d'allarme.`));
+  cM.appendChild(item(`Squeeze ${fmt(rel)} kgf/kg`, calc.man(rel,m).txt.toLowerCase(), calc.man(rel,m)));
   if(hasB) cM.appendChild(item(`Calo ${fmt(Math.max(drop,0),1)} kg`, "allarme da 3 kg in su", drop>=3?{cls:"bad",txt:"Calo ≥ 3 kg"}:{cls:"ok",txt:"Calo < 3 kg"}));
-  const cL = litCol(ref, [{name:"Squeeze", rel, kg:v.peak, has:true}]);
+  const cL = litCol(ref, [{name:"Squeeze", rel, kg:v.peak}]);
   if(hasB) cL.insertBefore(item(`Calo ${fmt(Math.max(dropPct,0),1)}%`, "rilevante oltre il 15% (Wollin 2017)", dropPct>15?{cls:"bad",txt:"Calo > 15%"}:{cls:"ok",txt:"Calo ≤ 15%"}), cL.lastChild);
   cmp.append(cM, cL); out.appendChild(cmp);
   if(v.n>=2 && v.cv>CV_CUT) out.appendChild(el("p","flag",`Prove poco coerenti (CV oltre il ${CV_CUT}%, soglia convenzionale): valuta una prova in più o controlla il setup.`));
@@ -712,14 +813,15 @@ function render(){
 }
 
 /* ---------- Eventi ---------- */
-function userEdit(){ $("#exampleRow").hidden = true; }
+function userEdit(){}
 $("#athId").addEventListener("input",e=>{ state.id = e.target.value; userEdit(); render(); });
 $("#date").addEventListener("input",e=>{ state.date = e.target.value; userEdit(); render(); });
 $("#weight").addEventListener("input",e=>{ state.weight = e.target.value; userEdit(); render(); });
+document.querySelectorAll('input[name=agg]').forEach(r=>r.addEventListener("change",e=>{ state.agg = e.target.value; render(); }));
 document.querySelectorAll('input[name=sex]').forEach(r=>r.addEventListener("change",e=>{ state.sex = e.target.value; userEdit(); render(); }));
 document.querySelectorAll('input[name=side]').forEach(r=>r.addEventListener("change",e=>{ state.d[current].side = e.target.value; userEdit(); updateLimbTitles(); render(); }));
 $("#btnClear").addEventListener("click",()=>{
-  state = blank(); current = "quad"; syncPatient(); $("#exampleRow").hidden = true;
+  state = blank(); current = "quad"; syncPatient();
   $("#athName").value = ""; $("#athNote").value = ""; $("#pdfMsg").textContent = "";
   loadPanel(); render(); $("#athId").focus();
 });
@@ -772,7 +874,7 @@ function buildPdf(){
 
   function footer(){
     doc.setFont("helvetica","normal"); doc.setFontSize(7.5); doc.setTextColor(...MUT);
-    doc.text(doc.splitTextToSize(pdfText("Valori misurati con dinamometro isometrico (picco di più prove). I riferimenti sono orientativi e vanno letti insieme alla valutazione clinica."), 180), M, 287);
+    doc.text(doc.splitTextToSize(pdfText(`Valori misurati con dinamometro isometrico (${state.agg==="picco"?"picco":"media"} di più prove). I riferimenti sono orientativi e vanno letti insieme alla valutazione clinica.`), 180), M, 287);
   }
   function newPage(){ footer(); doc.addPage(); y = 20; }
   function ensure(h){ if(y + h > BOTTOM) newPage(); }
@@ -866,7 +968,7 @@ function buildPdf(){
   heading("Come leggere i risultati");
   doc.setFont("helvetica","normal"); doc.setFontSize(9.5); doc.setTextColor(...INK);
   [
-    "Forza: il valore più alto tra le prove eseguite, in kg.",
+    state.agg==="picco" ? "Forza: il valore più alto tra le prove eseguite, in kg." : "Forza: la media delle prove eseguite, in kg.",
     "Forza relativa (kg/kg di peso): la forza divisa per il tuo peso corporeo. Permette di confrontarti con altri atleti.",
     "LSI: la forza del lato infortunato in percentuale rispetto al lato sano. L'obiettivo di riferimento è almeno il 90%.",
     "Deficit: quanto manca al lato infortunato per raggiungere il lato sano.",
@@ -907,8 +1009,8 @@ $("#btnPdf").addEventListener("click", async ()=>{
   }catch(err){ msg.textContent = saveErr(err); }
 });
 
-/* Avvio con dati di esempio */
-state = example();
+/* Avvio con la pagina vuota */
+state = blank();
 syncPatient();
 loadPanel(); render();
 })();
