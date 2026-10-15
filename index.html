@@ -1,0 +1,1029 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Dinamometria Isometrica</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#1E4BC9">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Dinamometria">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: una colonna pensata per il telefono. Paziente, registro CSV, scelta distretto, prove, risultati, PDF. */
+:root{
+  --bg:#F2F4F7; --surface:#FFFFFF; --sunk:#E9EDF3; --ink:#131A25; --muted:#5A6476; --line:#D7DDE6;
+  --accent:#1E4BC9; --accent-soft:#E3EAFB; --accent-ink:#FFFFFF;
+  --ok:#17784A; --ok-soft:#DFF2E7; --warn:#9A5B00; --warn-soft:#FBEBCF; --bad:#B8322A; --bad-soft:#F9E0DD;
+  --f-display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --r:12px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0D1219; --surface:#151C27; --sunk:#1B2431; --ink:#E6EBF2; --muted:#98A4B6; --line:#2A3445;
+  --accent:#7D9BFF; --accent-soft:#1E2A49; --accent-ink:#0D1219;
+  --ok:#53C68A; --ok-soft:#163626; --warn:#E3A64C; --warn-soft:#3A2A10; --bad:#F27466; --bad-soft:#3E1C19;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0D1219; --surface:#151C27; --sunk:#1B2431; --ink:#E6EBF2; --muted:#98A4B6; --line:#2A3445;
+  --accent:#7D9BFF; --accent-soft:#1E2A49; --accent-ink:#0D1219;
+  --ok:#53C68A; --ok-soft:#163626; --warn:#E3A64C; --warn-soft:#3A2A10; --bad:#F27466; --bad-soft:#3E1C19;
+  color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px 40px}
+.wrap{max-width:600px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+h1,h2,h3{font-family:var(--f-display);font-weight:600;margin:0;line-height:1.1;text-wrap:balance}
+h1{font-size:2rem}
+h2{font-size:1.4rem}
+h3{font-size:1.1rem;letter-spacing:.01em}
+p{margin:0}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.eyebrow{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.muted{color:var(--muted);font-size:.85rem}
+
+.box{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:12px}
+.top{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.grow{flex:1 1 120px}
+label,.lab{font-size:.8rem;font-weight:600;color:var(--muted)}
+input[type=text],input[type=date]{font:inherit;font-family:var(--f-mono);font-size:1.25rem;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px 10px;width:100%;min-width:0;height:50px}
+input[type=date]{font-size:1rem}
+input.txt{font-family:var(--f-body);font-size:1rem}
+textarea{font:inherit;font-size:1rem;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%;min-width:0;resize:vertical}
+textarea:focus,input[type=text]:focus,input[type=date]:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px var(--accent-soft)}
+.unit{font-family:var(--f-mono);font-size:.78rem;color:var(--muted);font-weight:400}
+button,.btn{font:inherit;font-size:.9rem;font-weight:600;border-radius:10px;padding:0 14px;height:44px;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink);display:inline-flex;align-items:center}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.row-btns{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.pill{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:999px;background:var(--warn-soft);color:var(--warn)}
+
+.tabs{display:flex;gap:8px;flex-wrap:wrap}
+.tab{height:42px;border-radius:999px;padding:0 14px;background:var(--surface);border:1px solid var(--line);color:var(--ink);font-weight:600;display:inline-flex;align-items:center;gap:6px}
+.tab[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.tab .dot{width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.7}
+
+.seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--bg);width:max-content}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg label{padding:0 20px;height:44px;display:flex;align-items:center;cursor:pointer;font-size:1rem;color:var(--ink);font-weight:600}
+.seg input:checked+label{background:var(--accent);color:var(--accent-ink)}
+.seg input:focus-visible+label{outline:2px solid var(--accent);outline-offset:-2px}
+
+/* Inserimento prove */
+.limb{border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.limb-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.limb-peak{font-family:var(--f-mono);font-size:.8rem;color:var(--muted)}
+.limb-peak b{color:var(--ink)}
+.trials{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.prev{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:end}
+
+/* Risultati */
+.empty{font-size:.92rem;color:var(--muted);border:1px dashed var(--line);border-radius:10px;padding:14px}
+
+.bar{position:relative;height:10px;border-radius:999px;background:var(--sunk)}
+.bar-fill{position:absolute;inset:0 auto 0 0;border-radius:999px}
+.bar-mark{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink)}
+.bar-prev{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--muted);opacity:.8}
+.bar-legend{display:flex;justify-content:space-between;font-family:var(--f-mono);font-size:.7rem;color:var(--muted);margin-top:4px;gap:6px}
+
+.cmp{display:grid;grid-template-columns:1fr;gap:10px}
+@media (min-width:560px){.cmp{grid-template-columns:1fr 1fr}}
+.col{border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.col-h{display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:space-between}
+.col-t{font-family:var(--f-mono);font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;font-weight:500}
+.tag{font-size:.7rem;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--sunk);color:var(--muted)}
+.item{display:flex;flex-direction:column;gap:2px}
+.item-top{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;justify-content:space-between}
+.item-k{font-size:1rem;font-weight:700}
+.item-k.ok{color:var(--ok)}
+.item-k.warn{color:var(--warn)}
+.item-k.bad{color:var(--bad)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.item-d{font-family:var(--f-mono);font-size:.75rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.note{font-size:.76rem;color:var(--muted)}
+.chip{font-size:.78rem;font-weight:600;padding:3px 9px;border-radius:999px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.chip.ok{background:var(--ok-soft);color:var(--ok)}
+.chip.warn{background:var(--warn-soft);color:var(--warn)}
+.chip.bad{background:var(--bad-soft);color:var(--bad)}
+.chip.neu{background:var(--sunk);color:var(--muted)}
+
+/* Riepilogo colorato sotto le prove */
+.tbl{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) minmax(0,1fr);gap:6px;align-items:stretch}
+.tbl .th{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:center;align-self:end}
+.tbl .tk{font-size:.86rem;color:var(--muted);align-self:center;line-height:1.25}
+.tbl .tk b{color:var(--ink);font-weight:600;display:block}
+.cell{border-radius:8px;padding:8px 6px;text-align:center;background:var(--sunk);font-family:var(--f-display);font-size:1.55rem;font-weight:600;line-height:1.05;font-variant-numeric:tabular-nums;min-width:0}
+.cell small{display:block;font-family:var(--f-body);font-size:.72rem;font-weight:500;color:var(--muted);margin-top:2px}
+.cell.ok{background:var(--ok-soft);color:var(--ok)}
+.cell.warn{background:var(--warn-soft);color:var(--warn)}
+.cell.bad{background:var(--bad-soft);color:var(--bad)}
+.cell.wide{grid-column:span 2}
+.legend{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:.76rem;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+
+/* Visita precedente */
+.delta{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.delta:last-of-type{border-bottom:0}
+.delta-k{font-weight:600}
+.delta-v{font-family:var(--f-mono);font-size:.8rem;color:var(--muted);grid-column:1}
+.delta .chip{grid-row:1 / span 2;grid-column:2}
+.sec-h{display:flex;flex-direction:column;gap:2px}
+.flag{border-left:3px solid var(--warn);background:var(--warn-soft);color:var(--ink);padding:9px 12px;border-radius:0 8px 8px 0;font-size:.86rem}
+.flag.bad{border-color:var(--bad);background:var(--bad-soft)}
+
+details{font-size:.82rem;color:var(--muted)}
+summary{cursor:pointer;font-weight:600;color:var(--ink);padding:4px 0}
+details ol{padding-left:18px;margin:8px 0 0;display:flex;flex-direction:column;gap:4px}
+@media (prefers-reduced-motion:no-preference){.bar-fill{transition:width .25s ease}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Strumento clinico · v0.7</span>
+    <h1>Dinamometria isometrica</h1>
+    <p class="muted">Valori in <b style="color:var(--ok)">verde</b>: target raggiunto o nel riferimento. <b style="color:var(--warn)">Giallo</b>: tra soglia e target o sotto il riferimento. <b style="color:var(--bad)">Rosso</b>: sotto soglia. Soglie del manuale non validate; riferimenti di letteratura: medie di atleti sani. I dati restano nel browser finché non salvi il registro CSV.</p>
+  </header>
+
+  <section class="box" aria-label="Paziente">
+    <div class="top">
+      <div class="field grow">
+        <label for="athId">Codice atleta</label>
+        <input type="text" id="athId" class="txt" autocomplete="off" placeholder="R01" list="idList">
+        <datalist id="idList"></datalist>
+      </div>
+      <div class="field grow">
+        <label for="date">Data</label>
+        <input type="date" id="date">
+      </div>
+    </div>
+    <div class="top">
+      <div class="field grow">
+        <label for="weight">Peso corporeo <span class="unit">kg</span></label>
+        <input type="text" id="weight" inputmode="decimal" autocomplete="off" placeholder="85">
+      </div>
+      <div class="field">
+        <span class="lab" id="sex-l">Sesso</span>
+        <div class="seg" role="radiogroup" aria-labelledby="sex-l">
+          <input type="radio" name="sex" id="sexM" value="M" checked><label for="sexM">M</label>
+          <input type="radio" name="sex" id="sexF" value="F"><label for="sexF">F</label>
+        </div>
+      </div>
+      <button type="button" id="btnClear">Nuovo paziente</button>
+    </div>
+    <div class="field">
+      <span class="lab" id="agg-l">Valore usato per i calcoli</span>
+      <div class="seg" role="radiogroup" aria-labelledby="agg-l">
+        <input type="radio" name="agg" id="aggMean" value="media" checked><label for="aggMean">Media prove</label>
+        <input type="radio" name="agg" id="aggPeak" value="picco"><label for="aggPeak">Picco</label>
+      </div>
+      <p class="note">Forza relativa, LSI e deficit si calcolano su questo valore. Le soglie del manuale sono pensate sul picco.</p>
+    </div>
+  </section>
+
+  <section class="box" aria-labelledby="reg-h">
+    <h2 id="reg-h">Registro valutazioni (CSV)</h2>
+    <p class="muted">Il registro è un file CSV sul tuo computer con tutte le sedute di tutti gli atleti. All'inizio importalo e carica l'atleta: la pagina compila da sola i valori della visita precedente. Alla fine salva la seduta: scarichi il registro aggiornato, che sostituisce il file vecchio.</p>
+    <div class="row-btns">
+      <label class="btn" for="csvIn">Importa CSV</label>
+      <input type="file" id="csvIn" accept=".csv,text/csv" hidden>
+      <button type="button" id="btnLoad">Carica atleta dal registro</button>
+    </div>
+    <div class="row-btns">
+      <span class="muted" id="regMsg" role="status">Nessun registro importato.</span>
+      <button type="button" class="primary" id="btnSave">Salva seduta e scarica CSV</button>
+    </div>
+  </section>
+
+  <nav class="tabs" role="tablist" aria-label="Distretto" id="tabs"></nav>
+
+  <section class="box" id="panel" role="tabpanel">
+    <div>
+      <h2 id="dName"></h2>
+      <p class="muted" id="dSetup"></p>
+    </div>
+    <div class="field" id="sideField">
+      <span class="lab" id="side-l">Lato leso</span>
+      <div class="seg" role="radiogroup" aria-labelledby="side-l">
+        <input type="radio" name="side" id="sideDx" value="dx" checked><label for="sideDx">Dx</label>
+        <input type="radio" name="side" id="sideSx" value="sx"><label for="sideSx">Sx</label>
+      </div>
+    </div>
+    <div id="inputs" style="display:flex;flex-direction:column;gap:10px"></div>
+    <div id="out" style="display:flex;flex-direction:column;gap:12px"></div>
+  </section>
+
+  <section class="box" aria-labelledby="pdf-h">
+    <h2 id="pdf-h">PDF per l'atleta</h2>
+    <p class="muted">Un riassunto dei test in linguaggio semplice, da inviare all'atleta. Nome e note finiscono solo nel PDF e non vengono salvati nel registro.</p>
+    <div class="field">
+      <label for="athName">Nome dell'atleta</label>
+      <input type="text" id="athName" class="txt" autocomplete="off" placeholder="Facoltativo">
+    </div>
+    <div class="field">
+      <label for="athNote">Note per l'atleta</label>
+      <textarea id="athNote" rows="3" placeholder="Facoltative, es. obiettivi delle prossime settimane"></textarea>
+    </div>
+    <div class="row-btns">
+      <span class="muted" id="pdfMsg" role="status"></span>
+      <button type="button" class="primary" id="btnPdf">Scarica PDF</button>
+    </div>
+  </section>
+
+  <details>
+    <summary>Fonti</summary>
+    <ol>
+      <li>Manuale Clinico Dinamometria (documento personale, senza fonti): soglie "manuale".</li>
+      <li>Owoeye 2024, quadricipite e hamstring in calciatori universitari. <a href="https://doi.org/10.70252/KOZO5621" target="_blank" rel="noopener">DOI</a></li>
+      <li>Rogowski 2022, rotatori di spalla nei rugbisti. <a href="https://doi.org/10.1177/17585732221098738" target="_blank" rel="noopener">DOI</a></li>
+      <li>Hanna 2009, adduttori e flessori d'anca in calciatori adulti. <a href="https://doi.org/10.1016/j.jsams.2009.05.001" target="_blank" rel="noopener">DOI</a></li>
+      <li>Alvarenga 2019, forza dell'anca in donne giovani poco attive. <a href="https://doi.org/10.1590/1413-785220192702202596" target="_blank" rel="noopener">DOI</a></li>
+      <li>Chamorro 2017, affidabilità del dinamometro portatile per arto inferiore. <a href="https://doi.org/10.1515/med-2017-0052" target="_blank" rel="noopener">DOI</a></li>
+      <li>Wollin 2017, calo degli adduttori &gt; 15%. <a href="https://doi.org/10.1080/02640414.2017.1363452" target="_blank" rel="noopener">DOI</a></li>
+      <li>Lorange 2024, LSI ≥ 90% nei criteri di rientro. <a href="https://doi.org/10.1177/03635465231187039" target="_blank" rel="noopener">DOI</a></li>
+      <li>Moran 2022, arto sano debole e LSI sovrastimato. <a href="https://doi.org/10.1016/j.asmr.2022.06.018" target="_blank" rel="noopener">DOI</a></li>
+      <li>Peek 2018, rapporto H:Q &lt; 0,60. <a href="https://doi.org/10.1080/15438627.2018.1447475" target="_blank" rel="noopener">DOI</a></li>
+      <li>Zelinski 2021, calo dei rotatori interni dopo la partita. <a href="https://doi.org/10.1519/JSC.0000000000003208" target="_blank" rel="noopener">DOI</a></li>
+    </ol>
+  </details>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+(function(){
+"use strict";
+const G = 9.80665;
+const LSI_CUT = 90;
+const CV_CUT = 10;
+
+const DISTRICTS = [
+  {id:"quad", tab:"Quadricipite", name:"Quadricipite", setup:"Seduto, ginocchio a 60°, cinghia sopra i malleoli", lateral:true},
+  {id:"ham",  tab:"Hamstring", name:"Hamstring", setup:"Prono, ginocchio a 30°, cinghia sopra i malleoli", lateral:true},
+  {id:"add",  tab:"Adduttori", name:"Adduttori (squeeze)", setup:"Supino, anche e ginocchia a 45°, spinta bilaterale", lateral:false},
+  {id:"abd",  tab:"Abduttori", name:"Abduttori d'anca", setup:"Il manuale non dà un protocollo: usa sempre la stessa posizione e annotala", lateral:true},
+  {id:"hf",   tab:"Flessori anca", name:"Flessori d'anca", setup:"Il manuale non dà un protocollo: usa sempre la stessa posizione e annotala", lateral:true},
+  {id:"pf",   tab:"Flessori plantari", name:"Flessori plantari", setup:"Il manuale non dà un protocollo: cinghia ben ancorata, posizione sempre uguale", lateral:true},
+  {id:"er",   tab:"Spalla ER", name:"Rotatori esterni di spalla", setup:"Abduzione 45° nel piano scapolare, gomito a 90°", lateral:true},
+  {id:"ir",   tab:"Spalla IR", name:"Rotatori interni di spalla", setup:"Abduzione 45° nel piano scapolare, gomito a 90°", lateral:true}
+];
+const MAN = {
+  quad:{min:0.30, target:0.35, absMin:20},
+  ham:{min:0.20, target:0.22},
+  add:{min:0.35, target:0.40},
+  er:{target:0.20},
+  ir:{target:0.26}
+};
+
+/* Riferimenti di letteratura. kind "rel" = kgf/kg, "abs" = kg. lo/hi assenti = solo media, nessun giudizio. */
+function litRef(id, sex){
+  const M = sex==="M";
+  switch(id){
+    case "quad": { const v = M ? [5.48,4.96,6.00] : [4.55,4.14,4.96];
+      return {kind:"rel", mean:v[0]/G, lo:v[1]/G, hi:v[2]/G, cite:"Owoeye 2024",
+        label:`Calciatori universitari ${M?"maschi":"femmine"}, arto dominante, media e IC 95%. Protocollo diverso dal manuale.`}; }
+    case "ham": { const v = M ? [3.29,2.90,3.64] : [2.62,2.39,2.85];
+      return {kind:"rel", mean:v[0]/G, lo:v[1]/G, hi:v[2]/G, cite:"Owoeye 2024",
+        label:`Calciatori universitari ${M?"maschi":"femmine"}, arto dominante, media e IC 95%. Protocollo diverso dal manuale.`}; }
+    case "er": return {kind:"rel", mean:2.11/G, lo:1.98/G, hi:2.24/G, cite:"Rogowski 2022",
+        label:"Rugbisti maschi, media ± DS con abduzione a 90° (il manuale usa 45°)." + (M?"":" Fonte solo maschile: con una paziente il confronto sovrastima il deficit.")};
+    case "ir": return {kind:"rel", mean:2.04/G, lo:1.89/G, hi:2.19/G, cite:"Rogowski 2022",
+        label:"Rugbisti maschi, media ± DS con abduzione a 90° (il manuale usa 45°)." + (M?"":" Fonte solo maschile: con una paziente il confronto sovrastima il deficit.")};
+    case "add": return {kind:"abs", mean:32.0, lo:30.9, hi:33.1, cite:"Hanna 2009",
+        label:"Calciatori adulti maschi, kg assoluti con anca a 45°, IC 95%. Dall'abstract non è chiaro se il test coincida con il tuo squeeze." + (M?"":" Fonte solo maschile.")};
+    case "hf": return M
+      ? {kind:"abs", mean:42.5, lo:41.1, hi:43.9, cite:"Hanna 2009",
+         label:"Calciatori adulti maschi, kg assoluti, arto non dominante (IC 95%). Con l'arto dominante la media sale a 47,3 kg."}
+      : {kind:"rel", mean:0.3854, cite:"Alvarenga 2019",
+         label:"Donne di 20–29 anni sedentarie o poco attive: solo la media, nessun intervallo. Un'atleta dovrebbe superarla."};
+    case "abd": return M ? null
+      : {kind:"rel", mean:0.1685, cite:"Alvarenga 2019",
+         label:"Donne di 20–29 anni sedentarie o poco attive: solo la media, nessun intervallo. Un'atleta dovrebbe superarla."};
+    default: return null;
+  }
+}
+const NO_LIT = {
+  abd:"Nessun valore isometrico per atleti maschi trovato su PubMed in forma utilizzabile: usa LSI e confronto con la visita precedente.",
+  pf:"Nessun valore di riferimento trovato. Inoltre il dinamometro portatile è poco preciso sui flessori plantari (limiti di accordo ±49%, Chamorro 2017): affidati soprattutto all'LSI e al confronto nel tempo, sempre con lo stesso setup."
+};
+
+const r2 = x => Math.round(x*100)/100;
+const calc = {
+  rel:(kg,w)=> kg/w,
+  lsi:(l,s)=> l/s*100,
+  defKg:(l,s)=> s-l,
+  defPct:(l,s)=> (s-l)/s*100,
+  peak: arr => { const v = arr.filter(Number.isFinite); return v.length ? Math.max(...v) : NaN; },
+  mean: arr => { const v = arr.filter(Number.isFinite); return v.length ? v.reduce((a,b)=>a+b,0)/v.length : NaN; },
+  cv(arr){ const v = arr.filter(Number.isFinite); if(v.length<2) return NaN;
+    const m = v.reduce((a,b)=>a+b,0)/v.length; if(m<=0) return NaN;
+    const sd = Math.sqrt(v.reduce((a,b)=>a+(b-m)**2,0)/(v.length-1)); return sd/m*100; },
+  man(raw,m){
+    const v = r2(raw);
+    if(m.min!=null && v < m.min) return {cls:"bad", txt:"Sotto soglia minima"};
+    if(v < m.target) return m.min!=null ? {cls:"warn", txt:"Tra soglia e target"} : {cls:"bad", txt:"Sotto target"};
+    return {cls:"ok", txt:"Target raggiunto"};
+  },
+  lit(raw,ref){
+    if(ref.lo==null) return null;
+    const v = r2(raw);
+    if(v < r2(ref.lo)) return {cls:"warn", txt:"Sotto il riferimento"};
+    if(v <= r2(ref.hi)) return {cls:"ok", txt:"Nel riferimento"};
+    return {cls:"ok", txt:"Sopra il riferimento"};
+  }
+};
+window.__calc = calc;
+
+const $ = s => document.querySelector(s);
+const fmt = (n,d=2) => Number.isFinite(n) ? n.toLocaleString("it-IT",{minimumFractionDigits:d,maximumFractionDigits:d}) : "–";
+const sgn = (n,d=1) => Number.isFinite(n) ? (n>0?"+":n<0?"−":"±") + fmt(Math.abs(n),d) : "–";
+function num(str){ const s = String(str ?? "").trim().replace(",","."); return /^\d*\.?\d+$/.test(s) ? parseFloat(s) : NaN; }
+function el(tag,cls,text){const e=document.createElement(tag); if(cls) e.className=cls; if(text!=null) e.textContent=text; return e;}
+const today = () => { const d = new Date(); return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10); };
+const itDate = iso => /^\d{4}-\d{2}-\d{2}$/.test(iso) ? iso.split("-").reverse().join("/") : iso;
+
+/* ---------- Stato in memoria ---------- */
+const blankD = d => d.lateral
+  ? {side:"dx", l:["","",""], s:["","",""], lp:"", sp:"", lpain:"", spain:"", pos:""}
+  : {v:["","",""], base:"", vpain:"", pos:""};
+const blank = () => ({id:"", date:today(), weight:"", sex:"M", agg:"media", d:Object.fromEntries(DISTRICTS.map(d=>[d.id, blankD(d)]))});
+let state = blank();
+let current = "quad";
+/* Valore usato per i calcoli: media delle prove oppure picco */
+const agg = arr => state.agg==="picco" ? calc.peak(arr) : calc.mean(arr);
+const aggName = () => state.agg==="picco" ? "picco" : "media";
+/* valori numerici di un distretto: l, s, peak (bilaterale) sono il valore scelto (media o picco) */
+function vals(id){
+  const x = state.d[id], d = DISTRICTS.find(q=>q.id===id);
+  if(!d.lateral){ const t = x.v.map(num); return {peak:agg(t), max:calc.peak(t), avg:calc.mean(t), cv:calc.cv(t), n:t.filter(Number.isFinite).length, base:num(x.base)}; }
+  const lt = x.l.map(num), st = x.s.map(num);
+  return {side:x.side, l:agg(lt), s:agg(st), lmax:calc.peak(lt), smax:calc.peak(st), lavg:calc.mean(lt), savg:calc.mean(st),
+    lcv:calc.cv(lt), scv:calc.cv(st),
+    ln:lt.filter(Number.isFinite).length, sn:st.filter(Number.isFinite).length, lp:num(x.lp), sp:num(x.sp)};
+}
+function filled(id){ const v = vals(id); return Number.isFinite(v.l) || Number.isFinite(v.s) || Number.isFinite(v.peak); }
+
+/* ---------- Registro CSV ----------
+   Formato "lungo": una riga per atleta, data, distretto e lato, con le prove in colonna.
+   Separatore ";" e decimali con la virgola, come l'Excel italiano. */
+const COLS = ["id_atleta","data","peso_kg","sesso","distretto","lato_leso","lato","prova_1_kg","prova_2_kg","prova_3_kg","posizione","dolore_0_10","note"];
+let registry = [];
+
+function parseCSV(text){
+  text = text.replace(/^﻿/,"");
+  const sep = text.split(/\r?\n/)[0].includes(";") ? ";" : ",";
+  const rows = []; let row = [], f = "", q = false;
+  for(let i=0;i<text.length;i++){
+    const c = text[i];
+    if(q){ if(c==='"'){ if(text[i+1]==='"'){ f+='"'; i++; } else q = false; } else f += c; }
+    else if(c==='"') q = true;
+    else if(c===sep){ row.push(f); f = ""; }
+    else if(c==="\n" || c==="\r"){ if(c==="\r" && text[i+1]==="\n") i++; row.push(f); rows.push(row); row = []; f = ""; }
+    else f += c;
+  }
+  if(f!=="" || row.length){ row.push(f); rows.push(row); }
+  if(!rows.length) throw new Error("File vuoto");
+  const head = rows.shift().map(h=>h.trim().toLowerCase());
+  const miss = ["id_atleta","data","distretto","lato"].filter(c=>!head.includes(c));
+  if(miss.length) throw new Error("colonne mancanti: " + miss.join(", "));
+  return rows.filter(r=>r.some(x=>x.trim()!==""))
+    .map(r=>Object.fromEntries(COLS.map(c=>{ const i = head.indexOf(c); return [c, i<0 ? "" : (r[i] ?? "").trim()]; })));
+}
+function toCSV(rows){
+  const esc = v => /[;"\r\n]/.test(v) ? '"' + v.replace(/"/g,'""') + '"' : v;
+  return "﻿" + [COLS.join(";"), ...rows.map(r=>COLS.map(c=>esc(String(r[c] ?? ""))).join(";"))].join("\r\n") + "\r\n";
+}
+const csvNum = s => { const n = num(s); return Number.isFinite(n) ? String(n).replace(".",",") : ""; };
+const rowVal = r => agg([r.prova_1_kg, r.prova_2_kg, r.prova_3_kg].map(num));
+
+/* Righe del registro per la seduta corrente */
+function sessionRows(){
+  const out = [];
+  const base = {id_atleta:state.id.trim(), data:state.date, peso_kg:csvNum(state.weight), sesso:state.sex, note:""};
+  DISTRICTS.forEach(d=>{
+    const x = state.d[d.id], pos = x.pos.trim() || d.setup;
+    const mk = (lato, tr, pain, leso) => ({...base, distretto:d.id, lato_leso:leso, lato,
+      prova_1_kg:csvNum(tr[0]), prova_2_kg:csvNum(tr[1]), prova_3_kg:csvNum(tr[2]), posizione:pos, dolore_0_10:csvNum(pain)});
+    if(d.lateral){
+      const other = x.side==="dx" ? "sx" : "dx";
+      if(x.l.some(t=>Number.isFinite(num(t)))) out.push(mk(x.side, x.l, x.lpain, x.side));
+      if(x.s.some(t=>Number.isFinite(num(t)))) out.push(mk(other, x.s, x.spain, x.side));
+    } else if(x.v.some(t=>Number.isFinite(num(t)))) out.push(mk("bil", x.v, x.vpain, ""));
+  });
+  return out;
+}
+/* Sedute dello stesso atleta e distretto, ordinate per data. Ogni seduta: {date, leso, l, s, bil} */
+function history(id, dist, before){
+  const by = {};
+  registry.filter(r=>r.id_atleta===id && r.distretto===dist && (!before || r.data < before)).forEach(r=>{
+    const h = by[r.data] || (by[r.data] = {date:r.data, leso:r.lato_leso, l:NaN, s:NaN, bil:NaN});
+    const p = rowVal(r);
+    if(r.lato==="bil") h.bil = p;
+    else if(r.lato_leso && r.lato===r.lato_leso) h.l = p;
+    else { h.s = p; if(r.lato_leso) h.leso = r.lato_leso; }
+  });
+  return Object.values(by).sort((a,b)=>a.date<b.date?-1:1);
+}
+/* Prepara una nuova seduta per un atleta già presente nel registro */
+function loadAthlete(id){
+  const rows = registry.filter(r=>r.id_atleta===id);
+  if(!rows.length) return false;
+  const last = rows.reduce((a,b)=> b.data > a.data ? b : a);
+  const s = blank(); s.agg = state.agg; s.id = id; s.weight = last.peso_kg; s.sex = last.sesso==="F" ? "F" : "M";
+  state = s;
+  DISTRICTS.forEach(d=>{
+    const h = history(id, d.id, state.date), p = h[h.length-1]; if(!p) return;
+    const x = state.d[d.id];
+    if(d.lateral){
+      if(p.leso==="dx" || p.leso==="sx") x.side = p.leso;
+      x.lp = csvNum(String(p.l)); x.sp = csvNum(String(p.s));
+    } else x.base = csvNum(String(p.bil));
+    const r = rows.find(r=>r.distretto===d.id && r.data===p.date && r.posizione);
+    if(r && r.posizione !== d.setup) x.pos = r.posizione;
+  });
+  return true;
+}
+function regStatus(extra){
+  const ids = [...new Set(registry.map(r=>r.id_atleta))].filter(Boolean).sort();
+  const dl = $("#idList"); dl.replaceChildren(...ids.map(i=>{ const o = document.createElement("option"); o.value = i; return o; }));
+  const sessions = new Set(registry.map(r=>r.id_atleta+"|"+r.data)).size;
+  $("#regMsg").textContent = (extra ? extra + " " : "") + (registry.length
+    ? `Registro: ${ids.length} atleti, ${sessions} sedute, ${registry.length} righe.`
+    : "Nessun registro importato.");
+}
+
+/* Salvataggio file: dentro Claude usa il permesso "downloads", altrimenti un normale download del browser */
+async function getDownloads(){
+  try{ return (window.claude && window.claude.use) ? await window.claude.use("downloads") : null; }catch(e){ return null; }
+}
+async function saveFile(filename, bytes, mime){
+  const dl = await getDownloads();
+  if(dl){ await dl.save({filename, data: bytes}); return; }
+  const url = URL.createObjectURL(new Blob([bytes], {type:mime}));
+  const a = document.createElement("a"); a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 2000);
+}
+const saveErr = err => { const c = err && err.code;
+  return c==="declined" ? "Download annullato." : c==="rate_limited" ? "C'è già una richiesta di download aperta: confermala o riprova tra poco." : "Non è stato possibile salvare il file."; };
+
+/* ---------- Tab ---------- */
+const tabs = $("#tabs");
+DISTRICTS.forEach(d=>{
+  const b = el("button","tab"); b.type="button"; b.id="tab-"+d.id; b.setAttribute("role","tab"); b.dataset.id=d.id;
+  b.appendChild(el("span",null,d.tab));
+  const dot = el("span","dot"); dot.hidden = true; b.appendChild(dot);
+  b.addEventListener("click",()=>{ current=d.id; loadPanel(); render(); });
+  tabs.appendChild(b);
+});
+
+/* ---------- Campi di inserimento ---------- */
+function inputField(id, label, value, onInput, ph, cls){
+  const f = el("div","field"); const l = el("label",null,label); l.htmlFor = id;
+  const i = document.createElement("input"); i.type="text"; i.id=id; i.autocomplete="off"; i.value=value;
+  if(cls) i.className = cls; else i.inputMode = "decimal";
+  if(ph) i.placeholder=ph;
+  i.addEventListener("input", e=>{ onInput(e.target.value); userEdit(); render(); });
+  f.append(l, i); return f;
+}
+function limbBlock(title, key, prevKey){
+  const x = state.d[current];
+  const b = el("div","limb");
+  const h = el("div","limb-h"); h.appendChild(el("h3",null,title));
+  const pk = el("span","limb-peak"); pk.id = "peak-"+key; h.appendChild(pk);
+  b.appendChild(h);
+  const t = el("div","trials");
+  [0,1,2].forEach(i=> t.appendChild(inputField(`${current}-${key}-${i}`, `Prova ${i+1} (kg)`, x[key][i], v=>{ state.d[current][key][i]=v; })));
+  b.appendChild(t);
+  const p = el("div","prev");
+  p.appendChild(inputField(`${current}-${prevKey}`, prevKey==="base" ? "Baseline abituale (kg)" : "Visita precedente (kg)", x[prevKey], v=>{ state.d[current][prevKey]=v; }, "facoltativa"));
+  p.appendChild(inputField(`${current}-${key}pain`, "Dolore al test (NRS 0–10)", x[key+"pain"], v=>{ state.d[current][key+"pain"]=v; }, "facoltativo"));
+  b.appendChild(p);
+  return b;
+}
+function loadPanel(){
+  const d = DISTRICTS.find(x=>x.id===current), x = state.d[current];
+  tabs.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected", String(t.dataset.id===current)));
+  $("#panel").setAttribute("aria-labelledby","tab-"+current);
+  $("#dName").textContent = d.name;
+  $("#dSetup").textContent = d.setup;
+  $("#sideField").hidden = !d.lateral;
+  const box = $("#inputs"); box.replaceChildren();
+  box.appendChild(inputField(`${current}-pos`, "Posizione usata (finisce nel registro)", x.pos, v=>{ state.d[current].pos=v; }, "Lascia vuoto se segui il setup indicato sopra", "txt"));
+  if(d.lateral){
+    document.getElementById(x.side==="sx"?"sideSx":"sideDx").checked = true;
+    box.appendChild(limbBlock("Lato leso", "l", "lp"));
+    box.appendChild(limbBlock("Lato sano", "s", "sp"));
+  } else {
+    box.appendChild(limbBlock("Squeeze bilaterale", "v", "base"));
+  }
+  updateLimbTitles();
+}
+function updateLimbTitles(){
+  const d = DISTRICTS.find(x=>x.id===current); if(!d.lateral) return;
+  const side = state.d[current].side, hs = $("#inputs").querySelectorAll("h3");
+  hs[0].textContent = `Lato leso · ${side==="dx"?"Dx":"Sx"}`;
+  hs[1].textContent = `Lato sano · ${side==="dx"?"Sx":"Dx"}`;
+}
+function syncPatient(){
+  $("#athId").value = state.id; $("#date").value = state.date; $("#weight").value = state.weight;
+  document.getElementById(state.sex==="F"?"sexF":"sexM").checked = true;
+  document.getElementById(state.agg==="picco"?"aggPeak":"aggMean").checked = true;
+}
+
+/* ---------- Mattoni dei risultati ---------- */
+function item(k, d, st){
+  const it = el("div","item"); const top = el("div","item-top");
+  const kk = el("span","item-k"+(st && st.cls!=="neu" ? " "+st.cls : ""),k);
+  if(st){ kk.appendChild(el("span","sr"," ("+st.txt+")")); kk.title = st.txt; }
+  top.appendChild(kk);
+  it.appendChild(top); if(d) it.appendChild(el("span","item-d",d)); return it;
+}
+function col(title, tag){
+  const c = el("div","col"); const h = el("div","col-h");
+  h.appendChild(el("span","col-t",title)); if(tag) h.appendChild(el("span","tag",tag));
+  c.appendChild(h); return c;
+}
+function peakLabel(key, avg, max, cv, n){
+  const p = $("#peak-"+key); if(!p) return;
+  p.replaceChildren();
+  if(!Number.isFinite(max)){ p.textContent = "media – · picco –"; return; }
+  p.append("media ", el("b",null,fmt(avg,1)+" kg"), " · picco ", el("b",null,fmt(max,1)+" kg"));
+  if(n>=2) p.append(` · CV ${fmt(cv,1)}%`);
+}
+/* ---------- Colori del riepilogo ----------
+   Forza relativa: soglie del manuale se esistono, altrimenti l'intervallo di letteratura.
+   Forza assoluta: soglia del manuale in kg (quadricipite) o riferimento di letteratura in kg.
+   LSI e deficit: cut-off 90% (deficit ≤ 10%). */
+function relStatus(id, rel){
+  if(!Number.isFinite(rel)) return null;
+  const m = MAN[id]; if(m) return calc.man(rel, m);
+  const ref = litRef(id, state.sex);
+  return ref && ref.kind==="rel" ? calc.lit(rel, ref) : null;
+}
+function kgStatus(id, kg){
+  if(!Number.isFinite(kg)) return null;
+  const m = MAN[id]; if(m && m.absMin!=null) return kg < m.absMin ? {cls:"bad", txt:`Sotto ${m.absMin} kg`} : {cls:"ok", txt:`Sopra ${m.absMin} kg`};
+  const ref = litRef(id, state.sex);
+  return ref && ref.kind==="abs" ? calc.lit(kg, ref) : null;
+}
+const lsiStatus = lsi => r2(lsi)>=LSI_CUT ? {cls:"ok", txt:`≥ ${LSI_CUT}%`} : {cls:"bad", txt:`Sotto ${LSI_CUT}%`};
+const defStatus = pct => r2(pct)<=100-LSI_CUT ? {cls:"ok", txt:`≤ ${100-LSI_CUT}%`} : {cls:"bad", txt:`Oltre ${100-LSI_CUT}%`};
+
+function cell(v, u, st, wide){
+  const c = el("div","cell"+(st && st.cls!=="neu" ? " "+st.cls : "")+(wide?" wide":""), v);
+  if(u) c.appendChild(el("small",null,u));
+  if(st){ c.appendChild(el("span","sr"," ("+st.txt+")")); c.title = st.txt; }
+  return c;
+}
+function tk(main, sub){ const t = el("div","tk"); t.appendChild(el("b",null,main)); if(sub) t.append(sub); return t; }
+function legend(){
+  const l = el("div","legend");
+  [["ok","buono / target raggiunto"],["warn","tra soglia e target"],["bad","deficitario"]].forEach(([c,t])=>{
+    const s = el("span"); const i = el("i"); i.style.background = `var(--${c})`; s.append(i, t); l.appendChild(s);
+  });
+  return l;
+}
+function secHead(title, text){
+  const h = el("div","sec-h"); h.appendChild(el("h3",null,title)); if(text) h.appendChild(el("p","note",text)); return h;
+}
+
+/* Variazione rispetto alla visita precedente, con freccia e colore */
+function delta(label, before, after, unit, dec, pct){
+  const r = el("div","delta");
+  const d = after - before, rel = before ? d/before*100 : NaN;
+  r.appendChild(el("span","delta-k",label));
+  /* variazioni minime (< 2% della forza o < 1 punto di LSI) restano grigie: sono dentro l'errore di misura */
+  const flat = pct ? Math.abs(rel) < 2 : Math.abs(d) < 1;
+  const arrow = flat ? "≈" : d>0 ? "▲" : "▼";
+  const cls = flat ? "neu" : d>0 ? "ok" : "bad";
+  const txt = `${arrow} ${sgn(d,dec)} ${unit}` + (pct && Number.isFinite(rel) ? ` (${sgn(rel)}%)` : "");
+  const ch = el("span","chip "+cls, txt); r.appendChild(ch);
+  r.appendChild(el("span","delta-v",`prima ${fmt(before,dec)} ${unit} → oggi ${fmt(after,dec)} ${unit}`));
+  return r;
+}
+
+/* Colonna letteratura: valore del paziente rispetto alla media di un gruppo di atleti sani */
+function litCol(ref, rows, noLitTxt){
+  if(!ref){ const c = col("Atleti sani in letteratura"); c.appendChild(el("p","note",noLitTxt)); return c; }
+  const c = col("Atleti sani in letteratura", ref.cite);
+  const u = ref.kind==="rel" ? "kgf/kg" : "kg", dd = ref.kind==="rel" ? 2 : 1;
+  c.appendChild(el("p","note", ref.kind==="rel"
+    ? "Confronta la forza relativa del paziente con la media del gruppo di riferimento. 100% = uguale alla media."
+    : "Confronta la forza assoluta (kg) del paziente con la media del gruppo di riferimento. 100% = uguale alla media."));
+  const rt = `media del gruppo ${fmt(ref.mean,dd)} ${u}` + (ref.lo!=null ? ` (intervallo ${fmt(ref.lo,dd)}–${fmt(ref.hi,dd)})` : "");
+  rows.forEach(r=>{
+    const v = ref.kind==="rel" ? r.rel : r.kg;
+    if(Number.isFinite(v)) c.appendChild(item(`${r.name}: ${fmt(v/ref.mean*100,0)}% della media`, `paziente ${fmt(v,dd)} ${u} · ${rt}`, calc.lit(v,ref)));
+  });
+  c.appendChild(el("p","note","Gruppo di riferimento: " + ref.label));
+  return c;
+}
+
+/* Storico dal registro: le sedute precedenti dello stesso atleta in questo distretto */
+function renderHistory(d, out){
+  const id = state.id.trim(); if(!id || !registry.length) return;
+  const h = history(id, d.id, state.date); if(!h.length) return;
+  const c = col("Storico dal registro", `${h.length} sedute · ${aggName()}`);
+  h.slice(-6).forEach(p=>{
+    if(d.lateral){
+      const lsi = Number.isFinite(p.l) && Number.isFinite(p.s) && p.s>0 ? calc.lsi(p.l,p.s) : NaN;
+      c.appendChild(item(`${itDate(p.date)} · LSI ${fmt(lsi,1)}%`, `leso ${fmt(p.l,1)} kg · sano ${fmt(p.s,1)} kg`, Number.isFinite(lsi) ? lsiStatus(lsi) : null));
+    } else c.appendChild(item(`${itDate(p.date)} · ${fmt(p.bil,1)} kg`, null, null));
+  });
+  if(h.length>6) c.appendChild(el("p","note","Mostro le ultime 6 sedute; le altre sono nel CSV."));
+  out.appendChild(c);
+}
+
+/* ---------- Distretti laterali ---------- */
+function renderLateral(d, w, out){
+  const v = vals(d.id), m = MAN[d.id], ref = litRef(d.id, state.sex);
+  const side = v.side==="dx"?"Dx":"Sx", other = v.side==="dx"?"Sx":"Dx";
+  peakLabel("l", v.lavg, v.lmax, v.lcv, v.ln); peakLabel("s", v.savg, v.smax, v.scv, v.sn);
+  const hasL = Number.isFinite(v.l), hasS = Number.isFinite(v.s);
+  if(!hasL && !hasS){ out.appendChild(el("p","empty","Inserisci almeno una prova per vedere i risultati.")); return; }
+  const relL = calc.rel(v.l,w), relS = calc.rel(v.s,w);
+  const hasLsi = hasL && hasS && v.s>0, lsi = hasLsi ? calc.lsi(v.l,v.s) : NaN;
+  const defKg = hasLsi ? Math.max(calc.defKg(v.l,v.s),0) : NaN, defPct = hasLsi ? Math.max(calc.defPct(v.l,v.s),0) : NaN;
+  const A = aggName(), Acap = A==="media" ? "Media" : "Picco";
+
+  /* Riepilogo colorato */
+  out.appendChild(secHead("Risultati", `Calcolati sulla ${A==="media"?"media delle prove":"prova migliore (picco)"}. Il colore indica il confronto con la soglia.`));
+  const t = el("div","tbl");
+  t.append(el("span"), el("span","th",`Leso · ${side}`), el("span","th",`Sano · ${other}`));
+  t.append(tk(`${Acap} forza`, "assoluta"), cell(hasL?fmt(v.l,1):"–","kg",kgStatus(d.id,v.l)), cell(hasS?fmt(v.s,1):"–","kg",kgStatus(d.id,v.s)));
+  t.append(tk("Forza relativa", "forza ÷ peso"), cell(hasL?fmt(relL):"–","kgf/kg",relStatus(d.id,relL)), cell(hasS?fmt(relS):"–","kgf/kg",relStatus(d.id,relS)));
+  t.append(tk("LSI", "leso ÷ sano"), cell(hasLsi?fmt(lsi,1):"–","%",hasLsi?lsiStatus(lsi):null,true));
+  t.append(tk("Deficit", "quanto manca al leso"), cell(hasLsi?fmt(defKg,1):"–","kg",hasLsi?defStatus(defPct):null), cell(hasLsi?fmt(defPct,1):"–","%",hasLsi?defStatus(defPct):null));
+  out.appendChild(t);
+  out.appendChild(legend());
+  const why = [];
+  if(m) why.push(`Forza relativa: soglia ${m.min!=null?fmt(m.min)+" e ":""}target ${fmt(m.target)} kgf/kg del manuale.`);
+  else if(ref && ref.kind==="rel" && ref.lo!=null) why.push(`Forza relativa: intervallo di atleti sani (${ref.cite}), il manuale non ha soglie.`);
+  else why.push("Forza relativa: nessuna soglia disponibile per questo distretto, resta grigia.");
+  if(m && m.absMin!=null) why.push(`Forza assoluta: ${m.absMin} kg minimi sul lato leso (manuale).`);
+  else if(ref && ref.kind==="abs") why.push(`Forza assoluta: intervallo di atleti sani (${ref.cite}).`);
+  why.push(`LSI verde da ${LSI_CUT}% in su; deficit verde fino al ${100-LSI_CUT}%.`);
+  out.appendChild(el("p","note",why.join(" ")));
+
+  /* Confronto con la visita precedente */
+  const hasLp = Number.isFinite(v.lp) && hasL, hasSp = Number.isFinite(v.sp) && hasS;
+  const prevLsi = Number.isFinite(v.lp) && Number.isFinite(v.sp) && v.sp>0 ? calc.lsi(v.lp,v.sp) : NaN;
+  if(hasLp || hasSp){
+    const c = col("Rispetto alla visita precedente");
+    if(Number.isFinite(prevLsi) && hasLsi){
+      const gap = LSI_CUT - lsi;
+      c.appendChild(el("p",null, lsi>prevLsi+0.05
+        ? `L'LSI è salito da ${fmt(prevLsi,0)}% a ${fmt(lsi,0)}%. ` + (gap>0 ? `Mancano ${fmt(gap,0)} punti al ${LSI_CUT}%.` : `Ha superato il ${LSI_CUT}%.`)
+        : lsi<prevLsi-0.05 ? `L'LSI è sceso da ${fmt(prevLsi,0)}% a ${fmt(lsi,0)}%.` : `L'LSI è stabile a ${fmt(lsi,0)}%.`));
+      c.appendChild(delta("LSI", prevLsi, lsi, "punti", 1, false));
+    }
+    if(hasLp) c.appendChild(delta(`Lato leso · ${side}`, v.lp, v.l, "kg", 1, true));
+    if(hasSp) c.appendChild(delta(`Lato sano · ${other}`, v.sp, v.s, "kg", 1, true));
+    if(hasLp && hasSp && v.s - v.sp > 0.1*v.sp) c.appendChild(el("p","note","Anche il lato sano è cresciuto di oltre il 10%: parte del cambiamento dell'LSI dipende dal lato sano (Moran 2022)."));
+    if(hasLsi){
+      const wrap = el("div"), bar = el("div","bar"), max = 120;
+      const f = el("div","bar-fill"); f.style.width = Math.max(0,Math.min(lsi,max))/max*100+"%";
+      f.style.background = r2(lsi)>=LSI_CUT ? "var(--ok)" : "var(--bad)";
+      const mk = el("div","bar-mark"); mk.style.left = LSI_CUT/max*100+"%";
+      bar.append(f, mk);
+      if(Number.isFinite(prevLsi)){ const pv = el("div","bar-prev"); pv.style.left = Math.max(0,Math.min(prevLsi,max))/max*100+"%"; bar.appendChild(pv); }
+      wrap.appendChild(bar);
+      const lg = el("div","bar-legend"); lg.append(el("span",null,"0%"), el("span",null,`linea nera = ${LSI_CUT}%` + (Number.isFinite(prevLsi)?" · grigia = visita prec.":"")), el("span",null,"120%"));
+      wrap.appendChild(lg); c.appendChild(wrap);
+    }
+    out.appendChild(c);
+  }
+  renderHistory(d, out);
+
+  /* Confronto con i riferimenti */
+  out.appendChild(secHead("Confronto con i riferimenti", "A sinistra le soglie cliniche del tuo manuale (obiettivi di riabilitazione). A destra quanto è forte il paziente rispetto ad atleti sani studiati in letteratura."));
+  const cmp = el("div","cmp");
+  if(m){
+    const cM = col("Soglie del manuale","non validate");
+    cM.appendChild(el("p","note",`Forza relativa: sotto ${m.min!=null?fmt(m.min)+" è deficitaria, da "+fmt(m.target):fmt(m.target)} kgf/kg l'obiettivo è raggiunto.`));
+    if(hasL) cM.appendChild(item(`Leso ${fmt(relL)} kgf/kg`, calc.man(relL,m).txt.toLowerCase(), calc.man(relL,m)));
+    if(hasS) cM.appendChild(item(`Sano ${fmt(relS)} kgf/kg`, calc.man(relS,m).txt.toLowerCase(), calc.man(relS,m)));
+    if(hasLsi) cM.appendChild(item(`LSI ${fmt(lsi,1)}%`, `criterio di rientro ≥ ${LSI_CUT}% (95% per sport ad alto impatto)`, lsiStatus(lsi)));
+    cmp.appendChild(cM);
+  } else {
+    const cM = col("Soglie del manuale");
+    cM.appendChild(el("p","note","Il manuale non prevede soglie di forza per questo distretto: vale solo il criterio di simmetria."));
+    if(hasLsi) cM.appendChild(item(`LSI ${fmt(lsi,1)}%`, `criterio generico ≥ ${LSI_CUT}%`, lsiStatus(lsi)));
+    cmp.appendChild(cM);
+  }
+  const cL = litCol(ref, [{name:"Leso", rel:relL, kg:v.l},{name:"Sano", rel:relS, kg:v.s}], NO_LIT[d.id]);
+  if(ref && hasLsi) cL.insertBefore(el("p","note","LSI ≥ 90% è il criterio più usato, ma non è validato come predittore di re-infortunio (Lorange 2024)."), cL.lastChild);
+  cmp.appendChild(cL);
+  out.appendChild(cmp);
+
+  /* Avvisi */
+  if((v.ln>=2 && v.lcv>CV_CUT) || (v.sn>=2 && v.scv>CV_CUT))
+    out.appendChild(el("p","flag",`Prove poco coerenti (CV oltre il ${CV_CUT}%, soglia convenzionale): valuta una prova in più o controlla il setup.`));
+  const floor = m ? (m.min ?? m.target) : null;
+  if(hasLsi && r2(lsi)>=LSI_CUT && ((floor!=null && r2(relS) < floor) || (ref && ref.lo!=null && r2(ref.kind==="rel"?relS:v.s) < r2(ref.lo))))
+    out.appendChild(el("p","flag","Simmetrico ma debole: anche il lato sano è sotto soglia o sotto il riferimento, quindi l'LSI può sovrastimare il recupero (Moran 2022)."));
+  if(num(state.d[d.id].lpain) >= 3)
+    out.appendChild(el("p","flag","Dolore ≥ 3/10 durante il test del lato leso: la forza misurata può essere sottostimata dall'inibizione da dolore."));
+  if(d.id==="quad" && hasL && v.l < m.absMin)
+    out.appendChild(el("p","flag bad",`Lato leso sotto ${m.absMin} kg assoluti: per il manuale controindica corsa veloce e pliometria intensa (soglia non validata).`));
+  if(d.id==="ir")
+    out.appendChild(el("p","flag","Nei rugbisti i rotatori interni restano più deboli fino a 3 giorni dopo la partita: evita di testare a ridosso della gara (Zelinski 2021)."));
+}
+
+/* ---------- Adduttori ---------- */
+function renderAdd(w, out){
+  const v = vals("add"), m = MAN.add, ref = litRef("add", state.sex);
+  peakLabel("v", v.avg, v.max, v.cv, v.n);
+  if(!Number.isFinite(v.peak)){ out.appendChild(el("p","empty","Test bilaterale: niente LSI. Inserisci almeno una prova e, se la conosci, la baseline del paziente per vedere il calo.")); return; }
+  const rel = calc.rel(v.peak,w), hasB = Number.isFinite(v.base) && v.base>0;
+  const drop = hasB ? v.base - v.peak : NaN, dropPct = hasB ? drop/v.base*100 : NaN;
+  const A = aggName(), Acap = A==="media" ? "Media" : "Picco";
+  out.appendChild(secHead("Risultati", `Calcolati sulla ${A==="media"?"media delle prove":"prova migliore (picco)"}. Test bilaterale: niente LSI, si guarda il calo rispetto alla baseline.`));
+  const t = el("div","tbl");
+  t.style.gridTemplateColumns = "minmax(0,1.1fr) minmax(0,2fr)";
+  t.append(tk(`${Acap} forza`, "assoluta"), cell(fmt(v.peak,1),"kg",kgStatus("add",v.peak)));
+  t.append(tk("Forza relativa", "forza ÷ peso"), cell(fmt(rel),"kgf/kg",calc.man(rel,m)));
+  if(hasB){
+    const st = drop>=3 || dropPct>15 ? {cls:"bad",txt:"Calo rilevante"} : {cls:"ok",txt:"Nessun calo rilevante"};
+    t.append(tk("Rispetto alla baseline", `abituale ${fmt(v.base,1)} kg`), cell(`${sgn(-drop)} kg · ${sgn(-dropPct)}%`, "allarme: calo ≥ 3 kg o > 15%", st));
+  }
+  out.appendChild(t);
+  out.appendChild(legend());
+  out.appendChild(el("p","note",`Forza relativa: soglia ${fmt(m.min)} e target ${fmt(m.target)} kgf/kg del manuale. Forza assoluta: intervallo di atleti sani (${ref.cite}).`));
+  renderHistory(DISTRICTS.find(d=>d.id==="add"), out);
+  out.appendChild(secHead("Confronto con i riferimenti", "A sinistra le soglie cliniche del tuo manuale. A destra quanto è forte il paziente rispetto ad atleti sani studiati in letteratura."));
+  const cmp = el("div","cmp");
+  const cM = col("Soglie del manuale","non validate");
+  cM.appendChild(el("p","note",`Forza relativa: sotto ${fmt(m.min)} è deficitaria, da ${fmt(m.target)} kgf/kg l'obiettivo è raggiunto. Un calo di 3 kg o più dalla baseline è un campanello d'allarme.`));
+  cM.appendChild(item(`Squeeze ${fmt(rel)} kgf/kg`, calc.man(rel,m).txt.toLowerCase(), calc.man(rel,m)));
+  if(hasB) cM.appendChild(item(`Calo ${fmt(Math.max(drop,0),1)} kg`, "allarme da 3 kg in su", drop>=3?{cls:"bad",txt:"Calo ≥ 3 kg"}:{cls:"ok",txt:"Calo < 3 kg"}));
+  const cL = litCol(ref, [{name:"Squeeze", rel, kg:v.peak}]);
+  if(hasB) cL.insertBefore(item(`Calo ${fmt(Math.max(dropPct,0),1)}%`, "rilevante oltre il 15% (Wollin 2017)", dropPct>15?{cls:"bad",txt:"Calo > 15%"}:{cls:"ok",txt:"Calo ≤ 15%"}), cL.lastChild);
+  cmp.append(cM, cL); out.appendChild(cmp);
+  if(v.n>=2 && v.cv>CV_CUT) out.appendChild(el("p","flag",`Prove poco coerenti (CV oltre il ${CV_CUT}%, soglia convenzionale): valuta una prova in più o controlla il setup.`));
+}
+
+/* ---------- Rapporti sullo stesso arto ---------- */
+function sideVals(id){ const v = vals(id), o = {dx:NaN, sx:NaN}; o[v.side] = v.l; o[v.side==="dx"?"sx":"dx"] = v.s; return o; }
+const PAIRS = [
+  {n:"ham", d:"quad", name:"H:Q", other:{quad:"Hamstring", ham:"Quadricipite"}},
+  {n:"er", d:"ir", name:"ER/IR", other:{er:"Spalla IR", ir:"Spalla ER"}}
+];
+function ratios(){
+  const r = [];
+  PAIRS.forEach(p=>{
+    const a = sideVals(p.n), b = sideVals(p.d);
+    ["dx","sx"].forEach(s=>{
+      if(Number.isFinite(a[s]) && Number.isFinite(b[s]) && b[s]>0)
+        r.push({pair:p.name, side:s, v:a[s]/b[s], injured: state.d[p.n].side===s || state.d[p.d].side===s});
+    });
+  });
+  return r;
+}
+function renderRatio(d, out){
+  const p = PAIRS.find(q=>q.n===d.id || q.d===d.id); if(!p) return;
+  const c = col("Rapporto " + p.name, "stesso arto");
+  const list = ratios().filter(r=>r.pair===p.name);
+  if(!list.length){ c.appendChild(el("p","note",`Compila anche ${p.other[d.id]} per calcolare ${p.name} sullo stesso arto.`)); out.appendChild(c); return; }
+  list.forEach(r=>{
+    const v = r2(r.v); let st;
+    if(p.name==="H:Q") st = v<0.60 ? {cls:"bad",txt:"Sotto 0,60"} : (v<0.65 ? {cls:"warn",txt:"Tra 0,60 e 0,65"} : {cls:"ok",txt:"≥ 0,65"});
+    else st = (v>=0.66 && v<=0.75) ? {cls:"neu",txt:"Nel range del manuale"} : {cls:"neu",txt:"Fuori range del manuale"};
+    c.appendChild(item(`${r.side==="dx"?"Dx":"Sx"}${r.injured?" (leso)":" (sano)"}: ${fmt(r.v)}`, null, st));
+  });
+  c.appendChild(el("p","note", p.name==="H:Q"
+    ? "Manuale: ≥ 0,60–0,65. In letteratura 0,60 è la soglia d'uso (Peek 2018), ma il 37–44% degli atleti sani sta sotto (Owoeye 2024): è un segnale, non un criterio."
+    : "Manuale: 0,66–0,75 (non confermato). Nei rugbisti con abduzione a 90° le forze medie di ER e IR sono quasi uguali, rapporto vicino a 1 (Rogowski 2022): per questo non do un giudizio."));
+  out.appendChild(c);
+}
+
+/* ---------- Render ---------- */
+function render(){
+  const out = $("#out"); out.replaceChildren();
+  const d = DISTRICTS.find(x=>x.id===current), w = num(state.weight);
+  if(!Number.isFinite(w) || w<=0){
+    out.appendChild(el("p","empty","Inserisci il peso del paziente per calcolare la forza relativa."));
+  } else if(d.lateral){ renderLateral(d, w, out); renderRatio(d, out); }
+  else renderAdd(w, out);
+  DISTRICTS.forEach(dd=>{ document.querySelector(`#tab-${dd.id} .dot`).hidden = !filled(dd.id); });
+}
+
+/* ---------- Eventi ---------- */
+function userEdit(){}
+$("#athId").addEventListener("input",e=>{ state.id = e.target.value; userEdit(); render(); });
+$("#date").addEventListener("input",e=>{ state.date = e.target.value; userEdit(); render(); });
+$("#weight").addEventListener("input",e=>{ state.weight = e.target.value; userEdit(); render(); });
+document.querySelectorAll('input[name=agg]').forEach(r=>r.addEventListener("change",e=>{ state.agg = e.target.value; render(); }));
+document.querySelectorAll('input[name=sex]').forEach(r=>r.addEventListener("change",e=>{ state.sex = e.target.value; userEdit(); render(); }));
+document.querySelectorAll('input[name=side]').forEach(r=>r.addEventListener("change",e=>{ state.d[current].side = e.target.value; userEdit(); updateLimbTitles(); render(); }));
+$("#btnClear").addEventListener("click",()=>{
+  state = blank(); current = "quad"; syncPatient();
+  $("#athName").value = ""; $("#athNote").value = ""; $("#pdfMsg").textContent = "";
+  loadPanel(); render(); $("#athId").focus();
+});
+
+$("#csvIn").addEventListener("change", async e=>{
+  const file = e.target.files[0]; e.target.value = ""; if(!file) return;
+  try{
+    registry = parseCSV(await file.text());
+    regStatus(`Importato "${file.name}".`);
+    render();
+  }catch(err){ $("#regMsg").textContent = `Non riesco a leggere il file: ${err.message}.`; }
+});
+$("#btnLoad").addEventListener("click",()=>{
+  const id = $("#athId").value.trim();
+  if(!registry.length){ $("#regMsg").textContent = "Importa prima il registro CSV."; return; }
+  if(!id){ $("#regMsg").textContent = "Scrivi il codice dell'atleta da caricare."; $("#athId").focus(); return; }
+  if(!loadAthlete(id)){ regStatus(`L'atleta ${id} non è nel registro.`); return; }
+  syncPatient(); userEdit(); loadPanel(); render();
+  regStatus(`Caricato ${id}: peso, lato leso e valori della visita precedente compilati.`);
+});
+$("#btnSave").addEventListener("click", async ()=>{
+  const id = state.id.trim(), msg = $("#regMsg");
+  if(!id){ msg.textContent = "Inserisci il codice atleta prima di salvare."; $("#athId").focus(); return; }
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(state.date)){ msg.textContent = "Inserisci la data della seduta."; return; }
+  if(!(num(state.weight)>0)){ msg.textContent = "Inserisci il peso del paziente."; return; }
+  const rows = sessionRows();
+  if(!rows.length){ msg.textContent = "Compila almeno un distretto prima di salvare."; return; }
+  const replaced = registry.some(r=>r.id_atleta===id && r.data===state.date);
+  const next = registry.filter(r=>!(r.id_atleta===id && r.data===state.date)).concat(rows)
+    .sort((a,b)=> a.id_atleta.localeCompare(b.id_atleta) || a.data.localeCompare(b.data));
+  try{
+    await saveFile("registro_dinamometria.csv", new TextEncoder().encode(toCSV(next)).buffer, "text/csv;charset=utf-8");
+    registry = next;
+    regStatus(`Seduta ${replaced ? "aggiornata" : "aggiunta"} (${rows.length} righe) e registro scaricato.`);
+  }catch(err){ msg.textContent = saveErr(err); }
+});
+
+/* ---------- PDF per l'atleta ---------- */
+const pdfText = s => String(s).replace(/[−–]/g,"-").replace(/≥/g,">=").replace(/≤/g,"<=").replace(/[  ]/g," ");
+function buildPdf(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({unit:"mm", format:"a4"});
+  const W = 210, M = 15, BOTTOM = 278;
+  const w = num(state.weight);
+  const name = $("#athName").value.trim(), note = $("#athNote").value.trim();
+  const date = /^\d{4}-\d{2}-\d{2}$/.test(state.date) ? itDate(state.date) : new Date().toLocaleDateString("it-IT");
+  const T = (s,x,yy,o)=>doc.text(pdfText(s),x,yy,o);
+  const INK=[19,26,37], MUT=[90,100,118], OK=[23,120,74], BAD=[184,50,42], ACC=[30,75,201], SUNK=[233,237,243], LINE=[215,221,230];
+  let y = 20;
+
+  function footer(){
+    doc.setFont("helvetica","normal"); doc.setFontSize(7.5); doc.setTextColor(...MUT);
+    doc.text(doc.splitTextToSize(pdfText(`Valori misurati con dinamometro isometrico (${state.agg==="picco"?"picco":"media"} di più prove). I riferimenti sono orientativi e vanno letti insieme alla valutazione clinica.`), 180), M, 287);
+  }
+  function newPage(){ footer(); doc.addPage(); y = 20; }
+  function ensure(h){ if(y + h > BOTTOM) newPage(); }
+  function heading(s){
+    ensure(14); doc.setFont("helvetica","bold"); doc.setFontSize(12); doc.setTextColor(...INK); T(s, M, y); y += 6;
+  }
+
+  doc.setFillColor(...ACC); doc.rect(0,0,W,4,"F");
+  doc.setFont("helvetica","bold"); doc.setFontSize(18); doc.setTextColor(...INK);
+  T("Valutazione della forza isometrica", M, y); y += 7;
+  doc.setFont("helvetica","normal"); doc.setFontSize(10); doc.setTextColor(...MUT);
+  T([name ? `Atleta: ${name}` : null, `Data: ${date}`, `Peso: ${fmt(w,1)} kg`].filter(Boolean).join("     "), M, y); y += 10;
+
+  /* Tabella dei test */
+  const cols = [{h:"Distretto",w:40},{h:"Lato infortunato",w:29},{h:"Lato sano",w:29},{h:"LSI",w:20},{h:"Deficit",w:24},{h:"Rispetto a prima",w:38}];
+  function header(){
+    doc.setFillColor(...SUNK); doc.rect(M, y, 180, 8, "F");
+    doc.setFont("helvetica","bold"); doc.setFontSize(8.5); doc.setTextColor(...INK);
+    let x = M; cols.forEach(c=>{ T(c.h, x+2, y+5.4); x += c.w; }); y += 8;
+  }
+  function row(cells){
+    doc.setFontSize(9);
+    const lines = cells.map((c,i)=> c.lines.flatMap(l=> doc.splitTextToSize(pdfText(l), cols[i].w-4)));
+    const h = Math.max(...lines.map(l=>l.length))*4.3 + 4.5;
+    if(y + h > BOTTOM){ newPage(); header(); }
+    let x = M;
+    lines.forEach((ls,i)=>{
+      const c = cells[i];
+      ls.forEach((l,j)=>{
+        doc.setFont("helvetica", (j===0 && (i===0 || c.bold)) ? "bold" : "normal");
+        doc.setTextColor(...(j===0 && c.color ? c.color : (j===0 ? INK : MUT)));
+        doc.text(l, x+2, y+5 + j*4.3);
+      });
+      x += cols[i].w;
+    });
+    y += h; doc.setDrawColor(...LINE); doc.setLineWidth(0.2); doc.line(M, y, M+180, y);
+  }
+  header();
+  let any = false;
+  DISTRICTS.forEach(d=>{
+    const v = vals(d.id);
+    if(d.lateral){
+      if(!Number.isFinite(v.l) && !Number.isFinite(v.s)) return;
+      any = true;
+      const side = v.side==="dx"?"Dx":"Sx", other = v.side==="dx"?"Sx":"Dx";
+      const limb = (kg, s)=> Number.isFinite(kg) ? [`${fmt(kg,1)} kg (${s})`, `${fmt(kg/w)} kg/kg`] : ["-"];
+      const hasLsi = Number.isFinite(v.l) && Number.isFinite(v.s) && v.s>0;
+      const lsi = hasLsi ? calc.lsi(v.l,v.s) : NaN;
+      const prevLsi = Number.isFinite(v.lp) && Number.isFinite(v.sp) && v.sp>0 ? calc.lsi(v.lp,v.sp) : NaN;
+      const prev = [];
+      if(Number.isFinite(v.lp) && Number.isFinite(v.l)) prev.push(`Infortunato ${sgn(v.l-v.lp)} kg`);
+      if(Number.isFinite(v.sp) && Number.isFinite(v.s)) prev.push(`Sano ${sgn(v.s-v.sp)} kg`);
+      if(Number.isFinite(prevLsi) && hasLsi) prev.push(`LSI ${sgn(lsi-prevLsi)} punti (era ${fmt(prevLsi,0)}%)`);
+      row([
+        {lines:[d.name]},
+        {lines:limb(v.l, side)},
+        {lines:limb(v.s, other)},
+        {lines: hasLsi ? [`${fmt(lsi,1)}%`, r2(lsi)>=LSI_CUT ? "obiettivo raggiunto" : "sotto il 90%"] : ["-"], bold:true, color: hasLsi ? (r2(lsi)>=LSI_CUT ? OK : BAD) : null},
+        {lines: hasLsi ? (v.s>v.l ? [`${fmt(calc.defKg(v.l,v.s),1)} kg`, `${fmt(calc.defPct(v.l,v.s),1)}%`] : ["nessuno"]) : ["-"]},
+        {lines: prev.length ? prev : ["-"]}
+      ]);
+    } else {
+      if(!Number.isFinite(v.peak)) return;
+      any = true;
+      const hasB = Number.isFinite(v.base) && v.base>0;
+      row([
+        {lines:[d.name, "test a due gambe"]},
+        {lines:[`${fmt(v.peak,1)} kg`, `${fmt(v.peak/w)} kg/kg`]},
+        {lines:["-"]}, {lines:["-"]}, {lines:["-"]},
+        {lines: hasB ? [`${sgn(v.peak-v.base)} kg dal valore abituale`, `(${sgn((v.peak-v.base)/v.base*100)}%)`] : ["-"]}
+      ]);
+    }
+  });
+  if(!any) return null;
+  y += 6;
+
+  /* Rapporti */
+  const rr = ratios();
+  if(rr.length){
+    heading("Equilibrio tra muscoli dello stesso arto");
+    doc.setFont("helvetica","normal"); doc.setFontSize(9.5); doc.setTextColor(...INK);
+    rr.forEach(r=>{
+      ensure(6);
+      const what = r.pair==="H:Q" ? "flessori / estensori del ginocchio" : "rotatori esterni / interni della spalla";
+      T(`${r.pair} ${r.side==="dx"?"destro":"sinistro"}${r.injured?" (lato infortunato)":""}: ${fmt(r.v)}  -  ${what}`, M, y); y += 5;
+    });
+    y += 4;
+  }
+
+  /* Legenda */
+  heading("Come leggere i risultati");
+  doc.setFont("helvetica","normal"); doc.setFontSize(9.5); doc.setTextColor(...INK);
+  [
+    state.agg==="picco" ? "Forza: il valore più alto tra le prove eseguite, in kg." : "Forza: la media delle prove eseguite, in kg.",
+    "Forza relativa (kg/kg di peso): la forza divisa per il tuo peso corporeo. Permette di confrontarti con altri atleti.",
+    "LSI: la forza del lato infortunato in percentuale rispetto al lato sano. L'obiettivo di riferimento è almeno il 90%.",
+    "Deficit: quanto manca al lato infortunato per raggiungere il lato sano.",
+    "Rispetto a prima: la differenza con la valutazione precedente."
+  ].forEach(s=>{
+    const ls = doc.splitTextToSize(pdfText("•  " + s), 180);
+    ensure(ls.length*4.6 + 1); doc.text(ls, M, y); y += ls.length*4.6 + 1.2;
+  });
+  y += 4;
+
+  /* Note */
+  if(note){
+    heading("Note del fisioterapista");
+    doc.setFont("helvetica","normal"); doc.setFontSize(10); doc.setTextColor(...INK);
+    const ls = doc.splitTextToSize(pdfText(note), 172);
+    const h = ls.length*4.8 + 6;
+    ensure(h);
+    doc.setFillColor(...SUNK); doc.roundedRect(M, y-1, 180, h, 2, 2, "F");
+    doc.text(ls, M+4, y+4); y += h + 4;
+  }
+  footer();
+  return doc;
+}
+window.__buildPdf = buildPdf;
+
+$("#btnPdf").addEventListener("click", async ()=>{
+  const msg = $("#pdfMsg"); msg.textContent = "";
+  const w = num(state.weight);
+  if(!Number.isFinite(w) || w<=0){ msg.textContent = "Inserisci prima il peso del paziente."; return; }
+  if(!window.jspdf){ msg.textContent = "Il generatore di PDF non si è caricato: controlla la connessione e ricarica la pagina."; return; }
+  const doc = buildPdf();
+  if(!doc){ msg.textContent = "Compila almeno un distretto per creare il PDF."; return; }
+  const who = $("#athName").value.trim().replace(/[^\p{L}\p{N} ]/gu,"").trim() || "atleta";
+  const d = /^\d{4}-\d{2}-\d{2}$/.test(state.date) ? itDate(state.date) : new Date().toLocaleDateString("it-IT");
+  try{
+    await saveFile(`Valutazione forza ${who} ${d.replace(/\//g,"-")}.pdf`, doc.output("arraybuffer"), "application/pdf");
+    msg.textContent = "PDF salvato.";
+  }catch(err){ msg.textContent = saveErr(err); }
+});
+
+/* App installabile: registra il service worker solo quando la pagina è servita da un sito (es. GitHub Pages) */
+if("serviceWorker" in navigator && location.protocol==="https:" && !location.hostname.endsWith("claude.ai") && !location.hostname.endsWith("claudeusercontent.com"))
+  navigator.serviceWorker.register("sw.js").catch(()=>{});
+
+/* Avvio con la pagina vuota */
+state = blank();
+syncPatient();
+loadPanel(); render();
+})();
+</script>
+</body>
+</html>
