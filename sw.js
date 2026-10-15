@@ -1,7 +1,7 @@
 /* Service worker: tiene in cache la pagina e le librerie, così l'app si apre anche senza connessione.
    Quando cambi index.html, aumenta VERSION per far scaricare la nuova versione. */
-const VERSION = "dinamometria-v0.7.2";
-const CORE = ["./", "index.html", "manifest.webmanifest", "icons/icon-192.png", "icons/icon-512.png",
+const VERSION = "dinamometria-v0.7.3";
+const CORE = ["./", "index.html", "manifest.webmanifest", "icons/app-192.png", "icons/app-512.png",
   "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"];
 
 self.addEventListener("install", e => {
