@@ -1,0 +1,16 @@
+{
+  "name": "Dinamometria isometrica",
+  "short_name": "Dinamometria",
+  "description": "Valutazione della forza isometrica con dinamometro manuale e registro delle sedute.",
+  "lang": "it",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F2F4F7",
+  "theme_color": "#1E4BC9",
+  "icons": [
+    {"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png"},
+    {"src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}
