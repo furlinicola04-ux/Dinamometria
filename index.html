@@ -57,7 +57,10 @@ a{color:var(--accent)}
 .grow{flex:1 1 120px}
 label,.lab{font-size:.8rem;font-weight:600;color:var(--muted)}
 input[type=text],input[type=date]{font:inherit;font-family:var(--f-mono);font-size:1.25rem;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px 10px;width:100%;min-width:0;height:50px}
-input[type=date]{font-size:1rem}
+/* iOS Safari disegna il campo data con il suo stile nativo e ignora larghezza e altezza: lo riportiamo al nostro */
+input[type=date]{font-size:1rem;-webkit-appearance:none;appearance:none;display:block;line-height:32px;max-width:100%;text-align:left}
+input[type=date]::-webkit-date-and-time-value{text-align:left;margin:0;min-height:32px}
+input[type=date]::-webkit-calendar-picker-indicator{margin:0}
 input.txt{font-family:var(--f-body);font-size:1rem}
 textarea{font:inherit;font-size:1rem;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%;min-width:0;resize:vertical}
 textarea:focus,input[type=text]:focus,input[type=date]:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px var(--accent-soft)}
