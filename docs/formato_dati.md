@@ -2,6 +2,8 @@
 
 Il registro (`registro_dinamometria.csv`, modello in [`data/modello_valutazioni.csv`](../data/modello_valutazioni.csv)) contiene tutte le valutazioni fatte con il Muscle Meter (MAT), che misura in **kg**. Si apre con Excel: separatore punto e virgola, decimali con la virgola, codifica UTF-8.
 
+Se apri il registro con Excel e lo risalvi, Excel cambia le date in GG/MM/AAAA e spesso salva il file in Windows-1252 invece che in UTF-8. La pagina se ne accorge all'import: riporta le date ad AAAA-MM-GG e rilegge correttamente ° e lettere accentate. Il registro che scarichi dalla pagina torna sempre nel formato giusto.
+
 ## Una riga per atleta, data, distretto e lato
 È il formato "lungo" (*tidy data*):
 - la pagina trova da sola la seduta precedente dello stesso atleta e distretto e la usa come "visita precedente";
