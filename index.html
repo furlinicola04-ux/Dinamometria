@@ -5,155 +5,187 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Dinamometria Isometrica</title>
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#1E4BC9">
+<!-- Colore della barra di stato: uguale allo sfondo in cima alla pagina, uno per tema (come Rehab) -->
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#f2f3f5">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#111214">
+<meta name="color-scheme" content="light dark">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/app-180.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Dinamometria">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
-/* Layout: una colonna pensata per il telefono. Paziente, registro CSV, scelta distretto, prove, risultati, PDF. */
+/* Grafica in stile iOS, allineata a Rehab: grigio chiaro e bianco, font di sistema, un solo accento blu profondo.
+   Layout: una colonna pensata per il telefono. Paziente, registro CSV, distretti (barra traslucida), prove, risultati, PDF. */
 :root{
-  --bg:#F2F4F7; --surface:#FFFFFF; --sunk:#E9EDF3; --ink:#131A25; --muted:#5A6476; --line:#D7DDE6;
-  --accent:#1E4BC9; --accent-soft:#E3EAFB; --accent-ink:#FFFFFF;
-  --ok:#17784A; --ok-soft:#DFF2E7; --warn:#9A5B00; --warn-soft:#FBEBCF; --bad:#B8322A; --bad-soft:#F9E0DD;
-  --f-display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
-  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
-  --f-mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --bg:#f2f3f5; --surface:#fff; --sunk:#f2f3f5; --fill:rgba(60,64,72,.08); --ink:#1d1d1f; --muted:#5f6368; --line:#dcdde1;
+  --mat:rgba(242,243,245,.82);
+  --accent:#24509a; --accent-fill:#24509a; --accent-ink:#fff; --accent-soft:#eaf0f8;
+  --ok:#1d7a35; --warn:#8a6100; --bad:#c0000f;
+  --ok-soft:color-mix(in srgb,var(--ok) 12%,var(--surface)); --warn-soft:color-mix(in srgb,#d99a00 16%,var(--surface)); --bad-soft:color-mix(in srgb,var(--bad) 10%,var(--surface));
+  --f-body:-apple-system,BlinkMacSystemFont,system-ui,"Segoe UI",Roboto,sans-serif;
+  --f-display:var(--f-body);
+  --f-mono:var(--f-body);
   --r:12px;
   color-scheme:light;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#0D1219; --surface:#151C27; --sunk:#1B2431; --ink:#E6EBF2; --muted:#98A4B6; --line:#2A3445;
-  --accent:#7D9BFF; --accent-soft:#1E2A49; --accent-ink:#0D1219;
-  --ok:#53C68A; --ok-soft:#163626; --warn:#E3A64C; --warn-soft:#3A2A10; --bad:#F27466; --bad-soft:#3E1C19;
+  --bg:#111214; --surface:#1c1d20; --sunk:#2a2b2f; --fill:rgba(160,165,175,.16); --ink:#f2f3f5; --muted:#a1a3a8; --line:#34363b;
+  --mat:rgba(17,18,20,.82);
+  --accent:#8db4ff; --accent-fill:#24509a; --accent-ink:#fff; --accent-soft:#1f2733;
+  --ok:#5fd37f; --warn:#ffd426; --bad:#ff6961;
+  --ok-soft:color-mix(in srgb,var(--ok) 16%,var(--surface)); --warn-soft:color-mix(in srgb,var(--warn) 14%,var(--surface)); --bad-soft:color-mix(in srgb,var(--bad) 16%,var(--surface));
   color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#0D1219; --surface:#151C27; --sunk:#1B2431; --ink:#E6EBF2; --muted:#98A4B6; --line:#2A3445;
-  --accent:#7D9BFF; --accent-soft:#1E2A49; --accent-ink:#0D1219;
-  --ok:#53C68A; --ok-soft:#163626; --warn:#E3A64C; --warn-soft:#3A2A10; --bad:#F27466; --bad-soft:#3E1C19;
+  --bg:#111214; --surface:#1c1d20; --sunk:#2a2b2f; --fill:rgba(160,165,175,.16); --ink:#f2f3f5; --muted:#a1a3a8; --line:#34363b;
+  --mat:rgba(17,18,20,.82);
+  --accent:#8db4ff; --accent-fill:#24509a; --accent-ink:#fff; --accent-soft:#1f2733;
+  --ok:#5fd37f; --warn:#ffd426; --bad:#ff6961;
+  --ok-soft:color-mix(in srgb,var(--ok) 16%,var(--surface)); --warn-soft:color-mix(in srgb,var(--warn) 14%,var(--surface)); --bad-soft:color-mix(in srgb,var(--bad) 16%,var(--surface));
   color-scheme:dark}
 
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.5;
-  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px 40px}
-.wrap{max-width:600px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
-h1,h2,h3{font-family:var(--f-display);font-weight:600;margin:0;line-height:1.1;text-wrap:balance}
-h1{font-size:2rem}
-h2{font-size:1.4rem}
-h3{font-size:1.1rem;letter-spacing:.01em}
+/* Tocco da app: niente flash grigio, niente attesa del doppio tocco, niente selezione del testo dei controlli */
+html{-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
+button,label,.btn,.tab,summary{touch-action:manipulation}
+button,.btn,.tab,.seg label,summary,.chip,.tag{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.47 var(--f-body);-webkit-font-smoothing:antialiased;overflow-x:clip;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:calc(40px + env(safe-area-inset-bottom,0px))}
+.wrap{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance}
+/* Titolo grande (large title) con tracking negativo, come Rehab */
+h1{font-size:2.125rem;line-height:1.1;font-weight:700;letter-spacing:-.02em;margin:6px 0 6px}
+h2{font-size:1.3rem;line-height:1.2;font-weight:700;letter-spacing:-.01em}
+h3{font-size:1.02rem;line-height:1.3;font-weight:650}
 p{margin:0}
 a{color:var(--accent)}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.eyebrow{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
-.muted{color:var(--muted);font-size:.85rem}
+header{padding-top:18px}
+header::before{content:"";display:block;width:36px;height:5px;border-radius:99px;background:var(--accent-fill);margin-bottom:10px}
+.eyebrow{font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+.muted{color:var(--muted);font-size:.9rem;line-height:1.4}
 
-.box{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:12px}
+.box{background:var(--surface);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:12px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
 .top{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
 .field{display:flex;flex-direction:column;gap:4px;min-width:0}
-.grow{flex:1 1 120px}
-label,.lab{font-size:.8rem;font-weight:600;color:var(--muted)}
-input[type=text],input[type=date]{font:inherit;font-family:var(--f-mono);font-size:1.25rem;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px 10px;width:100%;min-width:0;height:50px}
+.grow{flex:1 1 130px}
+label,.lab{font-size:.81rem;font-weight:500;color:var(--muted)}
+/* Campi: almeno 16px, altrimenti Safari su iPhone ingrandisce la pagina quando li tocchi */
+input[type=text],input[type=date]{font:inherit;font-size:1.25rem;font-variant-numeric:tabular-nums;color:var(--ink);background:var(--sunk);border:0;border-radius:10px;padding:8px 12px;width:100%;min-width:0;height:48px}
+input.txt{font-size:1rem}
 /* iOS Safari disegna il campo data con il suo stile nativo e ignora larghezza e altezza: lo riportiamo al nostro */
 input[type=date]{font-size:1rem;-webkit-appearance:none;appearance:none;display:block;line-height:32px;max-width:100%;text-align:left}
 input[type=date]::-webkit-date-and-time-value{text-align:left;margin:0;min-height:32px}
 input[type=date]::-webkit-calendar-picker-indicator{margin:0}
-input.txt{font-family:var(--f-body);font-size:1rem}
-textarea{font:inherit;font-size:1rem;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%;min-width:0;resize:vertical}
-textarea:focus,input[type=text]:focus,input[type=date]:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px var(--accent-soft)}
-.unit{font-family:var(--f-mono);font-size:.78rem;color:var(--muted);font-weight:400}
-button,.btn{font:inherit;font-size:.9rem;font-weight:600;border-radius:10px;padding:0 14px;height:44px;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink);display:inline-flex;align-items:center}
-button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+input::placeholder,textarea::placeholder{color:var(--muted);opacity:.7}
+textarea{font:inherit;font-size:1rem;color:var(--ink);background:var(--sunk);border:0;border-radius:10px;padding:10px 12px;width:100%;min-width:0;resize:vertical}
+textarea:focus,input[type=text]:focus,input[type=date]:focus{outline:none;box-shadow:0 0 0 2px var(--accent)}
+.unit{font-size:.78rem;color:var(--muted);font-weight:400}
+button,.btn{font:inherit;font-size:.94rem;font-weight:600;border-radius:99px;padding:0 16px;height:44px;cursor:pointer;border:0;background:var(--fill);color:var(--ink);display:inline-flex;align-items:center;justify-content:center}
+button.primary{background:var(--accent-fill);color:var(--accent-ink)}
 .row-btns{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}
-.pill{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:999px;background:var(--warn-soft);color:var(--warn)}
 
-.tabs{display:flex;gap:8px;flex-wrap:wrap}
-.tab{height:42px;border-radius:999px;padding:0 14px;background:var(--surface);border:1px solid var(--line);color:var(--ink);font-weight:600;display:inline-flex;align-items:center;gap:6px}
-.tab[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
-.tab .dot{width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.7}
+/* Distretti: barra traslucida (materiale) che resta in alto mentre scorri, come la barra delle sezioni di Rehab */
+.tabs{position:sticky;top:0;z-index:5;display:flex;gap:8px;overflow-x:auto;white-space:nowrap;scrollbar-width:none;overscroll-behavior-x:contain;
+  margin:0 calc(-1 * max(16px,env(safe-area-inset-left,0px)));padding:8px max(16px,env(safe-area-inset-left,0px));
+  background:var(--bg);border-bottom:.5px solid var(--line)}
+.tabs::-webkit-scrollbar{display:none}
+@supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.tabs{background:var(--mat);-webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%)}}
+@media (prefers-reduced-transparency:reduce){.tabs{background:var(--bg);-webkit-backdrop-filter:none;backdrop-filter:none}}
+.tab{flex:0 0 auto;height:38px;border-radius:99px;padding:0 14px;background:var(--fill);color:var(--ink);font-size:.94rem;font-weight:500;gap:6px}
+.tab[aria-selected="true"]{background:var(--accent-fill);color:#fff}
+.tab .dot{width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.7}
 
-.seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--bg);width:max-content}
+/* Controllo segmentato in stile iOS: binario grigio, opzione scelta su una "pastiglia" bianca */
+.seg{display:flex;padding:2px;border-radius:10px;background:var(--fill);width:max-content;max-width:100%}
 .seg input{position:absolute;opacity:0;pointer-events:none}
-.seg label{padding:0 20px;height:44px;display:flex;align-items:center;cursor:pointer;font-size:1rem;color:var(--ink);font-weight:600}
-.seg input:checked+label{background:var(--accent);color:var(--accent-ink)}
+.seg label{padding:0 16px;height:40px;display:flex;align-items:center;cursor:pointer;font-size:.94rem;color:var(--ink);font-weight:500;border-radius:8px;transition:background-color 150ms ease-out,box-shadow 150ms ease-out}
+.seg input:checked+label{background:var(--surface);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12),0 0 0 .5px rgba(0,0,0,.04)}
+:root[data-theme="dark"] .seg input:checked+label{background:#5b5c61}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .seg input:checked+label{background:#5b5c61}}
 .seg input:focus-visible+label{outline:2px solid var(--accent);outline-offset:-2px}
 
 /* Inserimento prove */
-.limb{border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.limb{background:var(--sunk);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.limb input[type=text],.limb textarea{background:var(--surface)}
 .limb-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
-.limb-peak{font-family:var(--f-mono);font-size:.8rem;color:var(--muted)}
-.limb-peak b{color:var(--ink)}
+.limb-peak{font-size:.81rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.limb-peak b{color:var(--ink);font-weight:600}
 .trials{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .prev{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:end}
 
 /* Risultati */
-.empty{font-size:.92rem;color:var(--muted);border:1px dashed var(--line);border-radius:10px;padding:14px}
+.empty{font-size:.94rem;color:var(--muted);text-align:center;background:var(--sunk);border-radius:12px;padding:20px 14px}
 
-.bar{position:relative;height:10px;border-radius:999px;background:var(--sunk)}
+.bar{position:relative;height:8px;border-radius:999px;background:var(--fill)}
 .bar-fill{position:absolute;inset:0 auto 0 0;border-radius:999px}
-.bar-mark{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink)}
-.bar-prev{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--muted);opacity:.8}
-.bar-legend{display:flex;justify-content:space-between;font-family:var(--f-mono);font-size:.7rem;color:var(--muted);margin-top:4px;gap:6px}
+.bar-mark{position:absolute;top:-4px;bottom:-4px;width:2px;border-radius:1px;background:var(--ink)}
+.bar-prev{position:absolute;top:-3px;bottom:-3px;width:2px;border-radius:1px;background:var(--muted);opacity:.8}
+.bar-legend{display:flex;justify-content:space-between;font-size:.75rem;color:var(--muted);margin-top:4px;gap:6px}
 
 .cmp{display:grid;grid-template-columns:1fr;gap:10px}
 @media (min-width:560px){.cmp{grid-template-columns:1fr 1fr}}
-.col{border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.col{background:var(--sunk);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:10px;min-width:0}
 .col-h{display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:space-between}
-.col-t{font-family:var(--f-mono);font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;font-weight:500}
-.tag{font-size:.7rem;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--sunk);color:var(--muted)}
+.col-t{font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.tag{font-size:.72rem;font-weight:600;padding:2px 9px;border-radius:99px;background:var(--surface);color:var(--muted)}
 .item{display:flex;flex-direction:column;gap:2px}
 .item-top{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;justify-content:space-between}
-.item-k{font-size:1rem;font-weight:700}
+.item-k{font-size:1rem;font-weight:600}
 .item-k.ok{color:var(--ok)}
 .item-k.warn{color:var(--warn)}
 .item-k.bad{color:var(--bad)}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-.item-d{font-family:var(--f-mono);font-size:.75rem;color:var(--muted);font-variant-numeric:tabular-nums}
-.note{font-size:.76rem;color:var(--muted)}
-.chip{font-size:.78rem;font-weight:600;padding:3px 9px;border-radius:999px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.item-d{font-size:.81rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.note{font-size:.81rem;color:var(--muted);line-height:1.4}
+.chip{font-size:.8rem;font-weight:600;padding:3px 10px;border-radius:99px;white-space:nowrap;font-variant-numeric:tabular-nums}
 .chip.ok{background:var(--ok-soft);color:var(--ok)}
 .chip.warn{background:var(--warn-soft);color:var(--warn)}
 .chip.bad{background:var(--bad-soft);color:var(--bad)}
-.chip.neu{background:var(--sunk);color:var(--muted)}
+.chip.neu{background:var(--surface);color:var(--muted)}
 
 /* Riepilogo colorato sotto le prove */
 .tbl{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) minmax(0,1fr);gap:6px;align-items:stretch}
-.tbl .th{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:center;align-self:end}
+.tbl .th{font-size:.72rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);text-align:center;align-self:end}
 .tbl .tk{font-size:.86rem;color:var(--muted);align-self:center;line-height:1.25}
 .tbl .tk b{color:var(--ink);font-weight:600;display:block}
-.cell{border-radius:8px;padding:8px 6px;text-align:center;background:var(--sunk);font-family:var(--f-display);font-size:1.55rem;font-weight:600;line-height:1.05;font-variant-numeric:tabular-nums;min-width:0}
-.cell small{display:block;font-family:var(--f-body);font-size:.72rem;font-weight:500;color:var(--muted);margin-top:2px}
+.cell{border-radius:10px;padding:8px 6px;text-align:center;background:var(--sunk);font-size:1.4rem;font-weight:700;letter-spacing:-.01em;line-height:1.1;font-variant-numeric:tabular-nums;min-width:0}
+.cell small{display:block;font-size:.72rem;font-weight:500;letter-spacing:0;color:var(--muted);margin-top:2px}
 .cell.ok{background:var(--ok-soft);color:var(--ok)}
 .cell.warn{background:var(--warn-soft);color:var(--warn)}
 .cell.bad{background:var(--bad-soft);color:var(--bad)}
 .cell.wide{grid-column:span 2}
-.legend{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:.76rem;color:var(--muted)}
-.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:.78rem;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}
 
 /* Visita precedente */
-.delta{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.delta{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;align-items:center;padding:8px 0;border-bottom:.5px solid var(--line)}
 .delta:last-of-type{border-bottom:0}
 .delta-k{font-weight:600}
-.delta-v{font-family:var(--f-mono);font-size:.8rem;color:var(--muted);grid-column:1}
+.delta-v{font-size:.81rem;color:var(--muted);grid-column:1;font-variant-numeric:tabular-nums}
 .delta .chip{grid-row:1 / span 2;grid-column:2}
-.sec-h{display:flex;flex-direction:column;gap:2px}
-.flag{border-left:3px solid var(--warn);background:var(--warn-soft);color:var(--ink);padding:9px 12px;border-radius:0 8px 8px 0;font-size:.86rem}
-.flag.bad{border-color:var(--bad);background:var(--bad-soft)}
+.sec-h{display:flex;flex-direction:column;gap:2px;margin-top:6px}
+.flag{background:var(--warn-soft);color:var(--ink);padding:10px 14px;border-radius:12px;font-size:.88rem;line-height:1.4}
+.flag.bad{background:var(--bad-soft)}
 
-details{font-size:.82rem;color:var(--muted)}
-summary{cursor:pointer;font-weight:600;color:var(--ink);padding:4px 0}
+details{font-size:.85rem;color:var(--muted)}
+summary{cursor:pointer;font-weight:600;color:var(--ink);padding:6px 0}
 details ol{padding-left:18px;margin:8px 0 0;display:flex;flex-direction:column;gap:4px}
+
+/* Risposta immediata alla pressione: i controlli si stringono appena, sul dito e non al rilascio */
+button,.btn,.tab,.seg label{transition:transform 100ms ease-out,background-color 100ms ease-out,box-shadow 150ms ease-out}
+button:active,.btn:active,.tab:active{transform:scale(.96)}
+@media (hover:hover) and (pointer:fine){button:hover,.btn:hover{filter:brightness(.97)}}
 @media (prefers-reduced-motion:no-preference){.bar-fill{transition:width .25s ease}}
+@media (prefers-reduced-motion:reduce){button:active,.btn:active,.tab:active{transform:none}}
 </style>
 </head>
 <body>
 
 <div class="wrap">
   <header>
-    <span class="eyebrow">Strumento clinico · v0.7</span>
+    <span class="eyebrow">Strumento clinico · v0.8</span>
     <h1>Dinamometria isometrica</h1>
     <p class="muted">Valori in <b style="color:var(--ok)">verde</b>: target raggiunto o nel riferimento. <b style="color:var(--warn)">Giallo</b>: tra soglia e target o sotto il riferimento. <b style="color:var(--bad)">Rosso</b>: sotto soglia. Soglie del manuale non validate; riferimenti di letteratura: medie di atleti sani. I dati restano nel browser finché non salvi il registro CSV.</p>
   </header>
@@ -509,7 +541,7 @@ function limbBlock(title, key, prevKey){
   b.appendChild(t);
   const p = el("div","prev");
   p.appendChild(inputField(`${current}-${prevKey}`, prevKey==="base" ? "Baseline abituale (kg)" : "Visita precedente (kg)", x[prevKey], v=>{ state.d[current][prevKey]=v; }, "facoltativa"));
-  p.appendChild(inputField(`${current}-${key}pain`, "Dolore al test (NRS 0–10)", x[key+"pain"], v=>{ state.d[current][key+"pain"]=v; }, "facoltativo"));
+  p.appendChild(inputField(`${current}-${key}pain`, "Dolore (NRS 0–10)", x[key+"pain"], v=>{ state.d[current][key+"pain"]=v; }, "facoltativo"));
   b.appendChild(p);
   return b;
 }
@@ -521,7 +553,7 @@ function loadPanel(){
   $("#dSetup").textContent = d.setup;
   $("#sideField").hidden = !d.lateral;
   const box = $("#inputs"); box.replaceChildren();
-  box.appendChild(inputField(`${current}-pos`, "Posizione usata (finisce nel registro)", x.pos, v=>{ state.d[current].pos=v; }, "Lascia vuoto se segui il setup indicato sopra", "txt"));
+  box.appendChild(inputField(`${current}-pos`, "Posizione usata (finisce nel registro)", x.pos, v=>{ state.d[current].pos=v; }, "Vuoto = setup indicato sopra", "txt"));
   if(d.lateral){
     document.getElementById(x.side==="sx"?"sideSx":"sideDx").checked = true;
     box.appendChild(limbBlock("Lato leso", "l", "lp"));
@@ -878,7 +910,7 @@ function buildPdf(){
   const name = $("#athName").value.trim(), note = $("#athNote").value.trim();
   const date = /^\d{4}-\d{2}-\d{2}$/.test(state.date) ? itDate(state.date) : new Date().toLocaleDateString("it-IT");
   const T = (s,x,yy,o)=>doc.text(pdfText(s),x,yy,o);
-  const INK=[19,26,37], MUT=[90,100,118], OK=[23,120,74], BAD=[184,50,42], ACC=[30,75,201], SUNK=[233,237,243], LINE=[215,221,230];
+  const INK=[19,26,37], MUT=[90,100,118], OK=[23,120,74], BAD=[184,50,42], ACC=[36,80,154], SUNK=[233,237,243], LINE=[215,221,230];
   let y = 20;
 
   function footer(){
