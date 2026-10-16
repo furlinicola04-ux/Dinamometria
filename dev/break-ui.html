@@ -29,36 +29,22 @@ iframe{display:block;border:0;width:100%;height:100%}
 const frame = document.getElementById("app"), bar = document.getElementById("dev"), busy = document.getElementById("busy");
 const pick = () => { const k = new URLSearchParams(location.search).get("data"); return FIXTURES[k] ? k : "demo"; };
 
-/* Windows-1252: come salva Excel su Windows con "CSV (delimitato dal separatore di elenco)" */
-function win1252(s){
-  const extra = {"€":0x80,"’":0x92,"‘":0x91,"“":0x93,"”":0x94,"–":0x96,"—":0x97};
-  return new Uint8Array([...s].map(c=>{ const n = c.codePointAt(0); return n<256 ? n : (extra[c] ?? 0x3F); }));
-}
-
 async function fill(key){
   const f = FIXTURES[key], w = frame.contentWindow, doc = frame.contentDocument;
   const $ = s => doc.querySelector(s);
   const set = (el, v) => { el.value = v; el.dispatchEvent(new w.Event("input", {bubbles:true})); };
   const tick = () => new Promise(r=>setTimeout(r,0));
-  if(f.csv != null){
-    const bytes = f.csvEncoding==="win1252" ? win1252(f.csv) : new TextEncoder().encode("﻿" + f.csv);
-    const dt = new w.DataTransfer(); dt.items.add(new w.File([bytes], f.csvName || "registro_dinamometria.csv", {type:"text/csv"}));
-    const inp = $("#csvIn"); inp.files = dt.files; inp.dispatchEvent(new w.Event("change"));
-    for(let i=0;i<400 && !/Importato|contiene|leggere/.test($("#regMsg").textContent);i++) await new Promise(r=>setTimeout(r,20));
-  }
-  if(f.athId) set($("#athId"), f.athId);
-  if(f.load) $("#btnLoad").click();
   if(f.weight) set($("#weight"), f.weight);
   if(f.sex==="F") $("#sexF").click();
   for(const [id, x] of Object.entries(f.d || {})){
     $("#tab-"+id).click(); await tick();
     if(x.side) { const r = $(x.side==="sx" ? "#sideSx" : "#sideDx"); if(!r.checked) r.click(); }
-    if(x.pos) set($(`#${id}-pos`), x.pos);
     if(x.v){ x.v.forEach((v,i)=> v!=="" && set($(`#${id}-v-${i}`), v)); if(x.base) set($(`#${id}-base`), x.base); continue; }
     (x.l||[]).forEach((v,i)=> v!=="" && set($(`#${id}-l-${i}`), v));
     (x.s||[]).forEach((v,i)=> v!=="" && set($(`#${id}-s-${i}`), v));
     if(x.lpain) set($(`#${id}-lpain`), x.lpain);
     if(x.lp) set($(`#${id}-lp`), x.lp);
+    if(x.sp) set($(`#${id}-sp`), x.sp);
   }
   const first = Object.keys(f.d || {})[0]; if(first) $("#tab-"+first).click();
   if(f.name) $("#athName").value = f.name;
