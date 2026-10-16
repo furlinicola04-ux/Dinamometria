@@ -186,17 +186,17 @@ button:active,.btn:active,.tab:active{transform:scale(.96)}
 
 <div class="wrap">
   <header>
-    <span class="eyebrow">Strumento clinico · v0.9</span>
+    <span class="eyebrow">Strumento clinico · v1.0</span>
     <h1>Dinamometria isometrica</h1>
-    <p class="muted">Valori in <b style="color:var(--ok)">verde</b>: target raggiunto o nel riferimento. <b style="color:var(--warn)">Giallo</b>: tra soglia e target o sotto il riferimento. <b style="color:var(--bad)">Rosso</b>: sotto soglia. Soglie del manuale non validate; riferimenti di letteratura: medie di atleti sani. I dati restano nel browser finché non salvi il registro CSV.</p>
+    <p class="muted">Valori in <b style="color:var(--ok)">verde</b>: target raggiunto o nel riferimento. <b style="color:var(--warn)">Giallo</b>: tra soglia e target o sotto il riferimento. <b style="color:var(--bad)">Rosso</b>: sotto soglia. Soglie del manuale non validate; riferimenti di letteratura: medie di atleti sani.</p>
+    <p class="muted">L'app non salva niente: con <b>Nuovo paziente</b> o chiudendo la pagina i dati si cancellano. Prima scarica o condividi il PDF.</p>
   </header>
 
   <section class="box" aria-label="Paziente">
     <div class="top">
       <div class="field grow code">
-        <label for="athId">Codice atleta</label>
-        <input type="text" id="athId" class="txt" autocomplete="off" placeholder="R01" list="idList">
-        <datalist id="idList"></datalist>
+        <label for="athName">Nome dell'atleta</label>
+        <input type="text" id="athName" class="txt" autocomplete="off" autocapitalize="words" placeholder="Facoltativo, va solo nel PDF">
       </div>
       <div class="field grow">
         <label for="date">Data</label>
@@ -227,20 +227,6 @@ button:active,.btn:active,.tab:active{transform:scale(.96)}
     </div>
   </section>
 
-  <section class="box" aria-labelledby="reg-h">
-    <h2 id="reg-h">Registro valutazioni (CSV)</h2>
-    <p class="muted">Il registro è un file CSV sul tuo computer con tutte le sedute di tutti gli atleti. All'inizio importalo e carica l'atleta: la pagina compila da sola i valori della visita precedente. Alla fine salva la seduta: scarichi il registro aggiornato, che sostituisce il file vecchio.</p>
-    <div class="row-btns">
-      <label class="btn" for="csvIn">Importa CSV</label>
-      <input type="file" id="csvIn" accept=".csv,text/csv" hidden>
-      <button type="button" id="btnLoad">Carica atleta dal registro</button>
-    </div>
-    <div class="row-btns">
-      <span class="muted" id="regMsg" role="status">Nessun registro importato.</span>
-      <button type="button" class="primary" id="btnSave">Salva seduta e scarica CSV</button>
-    </div>
-  </section>
-
   <nav class="tabs" role="tablist" aria-label="Distretto" id="tabs"></nav>
 
   <section class="box" id="panel" role="tabpanel">
@@ -261,18 +247,17 @@ button:active,.btn:active,.tab:active{transform:scale(.96)}
 
   <section class="box" aria-labelledby="pdf-h">
     <h2 id="pdf-h">PDF per l'atleta</h2>
-    <p class="muted">Un riassunto dei test in linguaggio semplice, da inviare all'atleta. Nome e note finiscono solo nel PDF e non vengono salvati nel registro.</p>
-    <div class="field">
-      <label for="athName">Nome dell'atleta</label>
-      <input type="text" id="athName" class="txt" autocomplete="off" placeholder="Facoltativo">
-    </div>
+    <p class="muted">Un riassunto dei test in linguaggio semplice, da mandare all'atleta: con <b>Condividi</b> lo invii direttamente su WhatsApp, Mail o AirDrop.</p>
     <div class="field">
       <label for="athNote">Note per l'atleta</label>
       <textarea id="athNote" rows="3" placeholder="Facoltative, es. obiettivi delle prossime settimane"></textarea>
     </div>
     <div class="row-btns">
       <span class="muted" id="pdfMsg" role="status"></span>
-      <button type="button" class="primary" id="btnPdf">Scarica PDF</button>
+      <span class="row-btns">
+        <button type="button" class="primary" id="btnPdf">Scarica PDF</button>
+        <button type="button" class="primary" id="btnShare" hidden>Condividi PDF</button>
+      </span>
     </div>
   </section>
 
@@ -385,15 +370,13 @@ const sgn = (n,d=1) => Number.isFinite(n) ? (n>0?"+":n<0?"−":"±") + fmt(Math.
 function num(str){ const s = String(str ?? "").trim().replace(",","."); return /^\d*\.?\d+$/.test(s) ? parseFloat(s) : NaN; }
 function el(tag,cls,text){const e=document.createElement(tag); if(cls) e.className=cls; if(text!=null) e.textContent=text; return e;}
 const today = () => { const d = new Date(); return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10); };
-const pl = (n, one, many) => `${n.toLocaleString("it-IT")} ${n===1 ? one : many}`;
-const r1str = x => Number.isFinite(x) ? String(Math.round(x*10)/10).replace(".",",") : "";
 const itDate = iso => /^\d{4}-\d{2}-\d{2}$/.test(iso) ? iso.split("-").reverse().join("/") : iso;
 
 /* ---------- Stato in memoria ---------- */
 const blankD = d => d.lateral
-  ? {side:"dx", l:["","",""], s:["","",""], lp:"", sp:"", lpain:"", spain:"", pos:""}
-  : {v:["","",""], base:"", vpain:"", pos:""};
-const blank = () => ({id:"", date:today(), weight:"", sex:"M", agg:"media", d:Object.fromEntries(DISTRICTS.map(d=>[d.id, blankD(d)]))});
+  ? {side:"dx", l:["","",""], s:["","",""], lp:"", sp:"", lpain:"", spain:""}
+  : {v:["","",""], base:"", vpain:""};
+const blank = () => ({date:today(), weight:"", sex:"M", agg:"media", d:Object.fromEntries(DISTRICTS.map(d=>[d.id, blankD(d)]))});
 let state = blank();
 let current = "quad";
 /* Valore usato per i calcoli: media delle prove oppure picco */
@@ -409,113 +392,6 @@ function vals(id){
     ln:lt.filter(Number.isFinite).length, sn:st.filter(Number.isFinite).length, lp:num(x.lp), sp:num(x.sp)};
 }
 function filled(id){ const v = vals(id); return Number.isFinite(v.l) || Number.isFinite(v.s) || Number.isFinite(v.peak); }
-
-/* ---------- Registro CSV ----------
-   Formato "lungo": una riga per atleta, data, distretto e lato, con le prove in colonna.
-   Separatore ";" e decimali con la virgola, come l'Excel italiano. */
-const COLS = ["id_atleta","data","peso_kg","sesso","distretto","lato_leso","lato","prova_1_kg","prova_2_kg","prova_3_kg","posizione","dolore_0_10","note"];
-let registry = [];
-
-function parseCSV(text){
-  text = text.replace(/^﻿/,"");
-  const sep = text.split(/\r?\n/)[0].includes(";") ? ";" : ",";
-  const rows = []; let row = [], f = "", q = false;
-  for(let i=0;i<text.length;i++){
-    const c = text[i];
-    if(q){ if(c==='"'){ if(text[i+1]==='"'){ f+='"'; i++; } else q = false; } else f += c; }
-    else if(c==='"') q = true;
-    else if(c===sep){ row.push(f); f = ""; }
-    else if(c==="\n" || c==="\r"){ if(c==="\r" && text[i+1]==="\n") i++; row.push(f); rows.push(row); row = []; f = ""; }
-    else f += c;
-  }
-  if(f!=="" || row.length){ row.push(f); rows.push(row); }
-  if(!rows.length) throw new Error("File vuoto");
-  const head = rows.shift().map(h=>h.trim().toLowerCase());
-  const miss = ["id_atleta","data","distretto","lato"].filter(c=>!head.includes(c));
-  if(miss.length) throw new Error("colonne mancanti: " + miss.join(", "));
-  const bad = [];
-  const out = rows.filter(r=>r.some(x=>x.trim()!==""))
-    .map(r=>Object.fromEntries(COLS.map(c=>{ const i = head.indexOf(c); return [c, i<0 ? "" : (r[i] ?? "").trim()]; })));
-  out.forEach((r,k)=>{ const d = isoDate(r.data); if(d) r.data = d; else bad.push(k+2); });
-  out.badDates = bad;
-  return out;
-}
-/* Excel riscrive le date come gg/mm/aaaa (o g/m/aa): le riportiamo ad aaaa-mm-gg, altrimenti l'ordine delle sedute è sbagliato */
-function isoDate(s){
-  if(/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
-  const m = /^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2}|\d{4})$/.exec(s); if(!m) return "";
-  const y = m[3].length===2 ? 2000 + +m[3] : +m[3], mo = +m[2], d = +m[1];
-  if(mo<1 || mo>12 || d<1 || d>31) return "";
-  return `${y}-${String(mo).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
-}
-/* Il registro dovrebbe essere UTF-8; se Excel l'ha salvato in Windows-1252 lo rileggiamo così (° e lettere accentate) */
-async function readText(file){
-  const buf = await file.arrayBuffer();
-  try{ return new TextDecoder("utf-8", {fatal:true}).decode(buf); }
-  catch(e){ return new TextDecoder("windows-1252").decode(buf); }
-}
-function toCSV(rows){
-  const esc = v => /[;"\r\n]/.test(v) ? '"' + v.replace(/"/g,'""') + '"' : v;
-  return "﻿" + [COLS.join(";"), ...rows.map(r=>COLS.map(c=>esc(String(r[c] ?? ""))).join(";"))].join("\r\n") + "\r\n";
-}
-const csvNum = s => { const n = num(s); return Number.isFinite(n) ? String(n).replace(".",",") : ""; };
-const rowVal = r => agg([r.prova_1_kg, r.prova_2_kg, r.prova_3_kg].map(num));
-
-/* Righe del registro per la seduta corrente */
-function sessionRows(){
-  const out = [];
-  const base = {id_atleta:state.id.trim(), data:state.date, peso_kg:csvNum(state.weight), sesso:state.sex, note:""};
-  DISTRICTS.forEach(d=>{
-    const x = state.d[d.id], pos = x.pos.trim() || d.setup;
-    const mk = (lato, tr, pain, leso) => ({...base, distretto:d.id, lato_leso:leso, lato,
-      prova_1_kg:csvNum(tr[0]), prova_2_kg:csvNum(tr[1]), prova_3_kg:csvNum(tr[2]), posizione:pos, dolore_0_10:csvNum(pain)});
-    if(d.lateral){
-      const other = x.side==="dx" ? "sx" : "dx";
-      if(x.l.some(t=>Number.isFinite(num(t)))) out.push(mk(x.side, x.l, x.lpain, x.side));
-      if(x.s.some(t=>Number.isFinite(num(t)))) out.push(mk(other, x.s, x.spain, x.side));
-    } else if(x.v.some(t=>Number.isFinite(num(t)))) out.push(mk("bil", x.v, x.vpain, ""));
-  });
-  return out;
-}
-/* Sedute dello stesso atleta e distretto, ordinate per data. Ogni seduta: {date, leso, l, s, bil} */
-function history(id, dist, before){
-  const by = {};
-  registry.filter(r=>r.id_atleta===id && r.distretto===dist && (!before || r.data < before)).forEach(r=>{
-    const h = by[r.data] || (by[r.data] = {date:r.data, leso:r.lato_leso, l:NaN, s:NaN, bil:NaN});
-    const p = rowVal(r);
-    if(r.lato==="bil") h.bil = p;
-    else if(r.lato_leso && r.lato===r.lato_leso) h.l = p;
-    else { h.s = p; if(r.lato_leso) h.leso = r.lato_leso; }
-  });
-  return Object.values(by).sort((a,b)=>a.date<b.date?-1:1);
-}
-/* Prepara una nuova seduta per un atleta già presente nel registro */
-function loadAthlete(id){
-  const rows = registry.filter(r=>r.id_atleta===id);
-  if(!rows.length) return false;
-  const last = rows.reduce((a,b)=> b.data > a.data ? b : a);
-  const s = blank(); s.agg = state.agg; s.id = id; s.weight = last.peso_kg; s.sex = last.sesso==="F" ? "F" : "M";
-  state = s;
-  DISTRICTS.forEach(d=>{
-    const h = history(id, d.id, state.date), p = h[h.length-1]; if(!p) return;
-    const x = state.d[d.id];
-    if(d.lateral){
-      if(p.leso==="dx" || p.leso==="sx") x.side = p.leso;
-      x.lp = r1str(p.l); x.sp = r1str(p.s);
-    } else x.base = r1str(p.bil);
-    const r = rows.find(r=>r.distretto===d.id && r.data===p.date && r.posizione);
-    if(r && r.posizione !== d.setup) x.pos = r.posizione;
-  });
-  return true;
-}
-function regStatus(extra){
-  const ids = [...new Set(registry.map(r=>r.id_atleta))].filter(Boolean).sort();
-  const dl = $("#idList"); dl.replaceChildren(...ids.map(i=>{ const o = document.createElement("option"); o.value = i; return o; }));
-  const sessions = new Set(registry.map(r=>r.id_atleta+"|"+r.data)).size;
-  $("#regMsg").textContent = (extra ? extra + (registry.length ? " " : "") : "") + (registry.length
-    ? `Registro: ${pl(ids.length,"atleta","atleti")}, ${pl(sessions,"seduta","sedute")}, ${pl(registry.length,"riga","righe")}.`
-    : (extra ? "" : "Nessun registro importato."));
-}
 
 /* Salvataggio file: dentro Claude usa il permesso "downloads", altrimenti un normale download del browser */
 async function getDownloads(){
@@ -574,7 +450,6 @@ function loadPanel(){
   $("#dSetup").textContent = d.setup;
   $("#sideField").hidden = !d.lateral;
   const box = $("#inputs"); box.replaceChildren();
-  box.appendChild(inputField(`${current}-pos`, "Posizione usata (finisce nel registro)", x.pos, v=>{ state.d[current].pos=v; }, "Vuoto = setup indicato sopra", "txt"));
   if(d.lateral){
     document.getElementById(x.side==="sx"?"sideSx":"sideDx").checked = true;
     box.appendChild(limbBlock("Lato leso", "l", "lp"));
@@ -591,7 +466,7 @@ function updateLimbTitles(){
   hs[1].textContent = `Lato sano · ${side==="dx"?"Sx":"Dx"}`;
 }
 function syncPatient(){
-  $("#athId").value = state.id; $("#date").value = state.date; $("#weight").value = state.weight;
+  $("#date").value = state.date; $("#weight").value = state.weight;
   document.getElementById(state.sex==="F"?"sexF":"sexM").checked = true;
   document.getElementById(state.agg==="picco"?"aggPeak":"aggMean").checked = true;
 }
@@ -710,21 +585,6 @@ function litCol(ref, rows, noLitTxt){
   return c;
 }
 
-/* Storico dal registro: le sedute precedenti dello stesso atleta in questo distretto */
-function renderHistory(d, out){
-  const id = state.id.trim(); if(!id || !registry.length) return;
-  const h = history(id, d.id, state.date); if(!h.length) return;
-  const c = col("Storico dal registro", `${pl(h.length,"seduta","sedute")} · ${aggName()}`);
-  h.slice(-6).forEach(p=>{
-    if(d.lateral){
-      const lsi = Number.isFinite(p.l) && Number.isFinite(p.s) && p.s>0 ? calc.lsi(p.l,p.s) : NaN;
-      c.appendChild(item(`${itDate(p.date)} · LSI ${fmt(lsi,1)}%`, `leso ${fmt(p.l,1)} kg · sano ${fmt(p.s,1)} kg`, Number.isFinite(lsi) ? lsiStatus(lsi) : null));
-    } else c.appendChild(item(`${itDate(p.date)} · ${fmt(p.bil,1)} kg`, null, null));
-  });
-  if(h.length>6) c.appendChild(el("p","note","Mostro le ultime 6 sedute; le altre sono nel CSV."));
-  out.appendChild(c);
-}
-
 /* ---------- Distretti laterali ---------- */
 function renderLateral(d, w, out){
   const v = vals(d.id), m = MAN[d.id], ref = litRef(d.id, state.sex);
@@ -789,7 +649,6 @@ function renderLateral(d, w, out){
     }
     out.appendChild(c);
   }
-  renderHistory(d, out);
 
   /* Confronto con i riferimenti */
   out.appendChild(secHead("Confronto con i riferimenti", "A sinistra le soglie cliniche del tuo manuale (obiettivi di riabilitazione). A destra quanto è forte il paziente rispetto ad atleti sani studiati in letteratura."));
@@ -851,7 +710,6 @@ function renderAdd(w, out){
   out.appendChild(t);
   out.appendChild(legend());
   out.appendChild(el("p","note",(hasR ? `Forza relativa: soglia ${fmt(m.min)} e target ${fmt(m.target)} kgf/kg del manuale.` : "Forza relativa: inserisci il peso del paziente per calcolarla.") + ` Forza assoluta: intervallo di atleti sani (${ref.cite}).`));
-  renderHistory(DISTRICTS.find(d=>d.id==="add"), out);
   out.appendChild(secHead("Confronto con i riferimenti", "A sinistra le soglie cliniche del tuo manuale. A destra quanto è forte il paziente rispetto ad atleti sani studiati in letteratura."));
   const cmp = el("div","cmp");
   const cM = col("Soglie del manuale","non validate");
@@ -914,7 +772,6 @@ function render(){
 
 /* ---------- Eventi ---------- */
 function userEdit(){}
-$("#athId").addEventListener("input",e=>{ state.id = e.target.value; userEdit(); render(); });
 $("#date").addEventListener("input",e=>{ state.date = e.target.value; userEdit(); render(); });
 $("#weight").addEventListener("input",e=>{ state.weight = e.target.value; userEdit(); render(); });
 document.querySelectorAll('input[name=agg]').forEach(r=>r.addEventListener("change",e=>{ state.agg = e.target.value; render(); }));
@@ -923,42 +780,7 @@ document.querySelectorAll('input[name=side]').forEach(r=>r.addEventListener("cha
 $("#btnClear").addEventListener("click",()=>{
   state = blank(); current = "quad"; syncPatient();
   $("#athName").value = ""; $("#athNote").value = ""; $("#pdfMsg").textContent = "";
-  loadPanel(); render(); $("#athId").focus();
-});
-
-$("#csvIn").addEventListener("change", async e=>{
-  const file = e.target.files[0]; e.target.value = ""; if(!file) return;
-  try{
-    registry = parseCSV(await readText(file));
-    const bd = registry.badDates;
-    regStatus(!registry.length ? `Il file "${file.name}" non contiene sedute: è un registro nuovo, le sedute che salvi verranno aggiunte qui.`
-      : `Importato "${file.name}".` + (bd.length ? ` Attenzione: data non riconosciuta alle righe ${bd.slice(0,5).join(", ")}${bd.length>5?"…":""}.` : ""));
-    render();
-  }catch(err){ $("#regMsg").textContent = `Non riesco a leggere il file: ${err.message}.`; }
-});
-$("#btnLoad").addEventListener("click",()=>{
-  const id = $("#athId").value.trim();
-  if(!registry.length){ $("#regMsg").textContent = "Importa prima il registro CSV."; return; }
-  if(!id){ $("#regMsg").textContent = "Scrivi il codice dell'atleta da caricare."; $("#athId").focus(); return; }
-  if(!loadAthlete(id)){ regStatus(`L'atleta ${id} non è nel registro.`); return; }
-  syncPatient(); userEdit(); loadPanel(); render();
-  regStatus(`Caricato ${id}: peso, lato leso e valori della visita precedente compilati.`);
-});
-$("#btnSave").addEventListener("click", async ()=>{
-  const id = state.id.trim(), msg = $("#regMsg");
-  if(!id){ msg.textContent = "Inserisci il codice atleta prima di salvare."; $("#athId").focus(); return; }
-  if(!/^\d{4}-\d{2}-\d{2}$/.test(state.date)){ msg.textContent = "Inserisci la data della seduta."; return; }
-  if(!(num(state.weight)>0)){ msg.textContent = "Inserisci il peso del paziente."; return; }
-  const rows = sessionRows();
-  if(!rows.length){ msg.textContent = "Compila almeno un distretto prima di salvare."; return; }
-  const replaced = registry.some(r=>r.id_atleta===id && r.data===state.date);
-  const next = registry.filter(r=>!(r.id_atleta===id && r.data===state.date)).concat(rows)
-    .sort((a,b)=> a.id_atleta.localeCompare(b.id_atleta) || a.data.localeCompare(b.data));
-  try{
-    await saveFile("registro_dinamometria.csv", new TextEncoder().encode(toCSV(next)).buffer, "text/csv;charset=utf-8");
-    registry = next;
-    regStatus(`Seduta ${replaced ? "aggiornata" : "aggiunta"} (${rows.length} righe) e registro scaricato.`);
-  }catch(err){ msg.textContent = saveErr(err); }
+  loadPanel(); render(); window.scrollTo(0,0); $("#athName").focus();
 });
 
 /* ---------- PDF per l'atleta ---------- */
@@ -974,7 +796,7 @@ function buildPdf(){
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({unit:"mm", format:"a4"});
   const W = 210, M = 15, BOTTOM = 278;
-  const w = num(state.weight);
+  const w = num(state.weight) > 0 ? num(state.weight) : NaN;
   const name = $("#athName").value.trim(), note = $("#athNote").value.trim();
   const date = /^\d{4}-\d{2}-\d{2}$/.test(state.date) ? itDate(state.date) : new Date().toLocaleDateString("it-IT");
   const T = (s,x,yy,o)=>doc.text(pdfText(s),x,yy,o);
@@ -1029,7 +851,7 @@ function buildPdf(){
       if(!Number.isFinite(v.l) && !Number.isFinite(v.s)) return;
       any = true;
       const side = v.side==="dx"?"Dx":"Sx", other = v.side==="dx"?"Sx":"Dx";
-      const limb = (kg, s)=> Number.isFinite(kg) ? [`${fmt(kg,1)} kg (${s})`, `${fmt(kg/w)} kg/kg`] : ["-"];
+      const limb = (kg, s)=> Number.isFinite(kg) ? [`${fmt(kg,1)} kg (${s})`, ...(Number.isFinite(w) ? [`${fmt(kg/w)} kg/kg`] : [])] : ["-"];
       const hasLsi = Number.isFinite(v.l) && Number.isFinite(v.s) && v.s>0;
       const lsi = hasLsi ? calc.lsi(v.l,v.s) : NaN;
       const prevLsi = Number.isFinite(v.lp) && Number.isFinite(v.sp) && v.sp>0 ? calc.lsi(v.lp,v.sp) : NaN;
@@ -1051,7 +873,7 @@ function buildPdf(){
       const hasB = Number.isFinite(v.base) && v.base>0;
       row([
         {lines:[d.name, "test a due gambe"]},
-        {lines:[`${fmt(v.peak,1)} kg`, `${fmt(v.peak/w)} kg/kg`]},
+        {lines:[`${fmt(v.peak,1)} kg`, ...(Number.isFinite(w) ? [`${fmt(v.peak/w)} kg/kg`] : [])]},
         {lines:["-"]}, {lines:["-"]}, {lines:["-"]},
         {lines: hasB ? [`${sgn(v.peak-v.base)} kg dal valore abituale`, `(${sgn((v.peak-v.base)/v.base*100)}%)`] : ["-"]}
       ]);
@@ -1103,19 +925,34 @@ function buildPdf(){
 }
 window.__buildPdf = buildPdf;
 
-$("#btnPdf").addEventListener("click", async ()=>{
+/* PDF: lo crea, poi lo scarica oppure lo apre nel foglio di condivisione dell'iPhone (WhatsApp, Mail, AirDrop…) */
+function makePdf(){
   const msg = $("#pdfMsg"); msg.textContent = "";
-  const w = num(state.weight);
-  if(!Number.isFinite(w) || w<=0){ msg.textContent = "Inserisci prima il peso del paziente."; return; }
-  if(!window.jspdf){ msg.textContent = "Il generatore di PDF non si è caricato: controlla la connessione e ricarica la pagina."; return; }
+  if(!window.jspdf){ msg.textContent = "Il generatore di PDF non si è caricato: controlla la connessione e ricarica la pagina."; return null; }
+  /* un errore di battitura finirebbe nel PDF come risultato vero: prima va corretto */
+  const sus = DISTRICTS.filter(d=>{ const x = state.d[d.id]; return (d.lateral ? [x.l, x.s] : [x.v]).some(a=>suspectTrials(a).length); });
+  if(sus.length){ msg.textContent = `Prima controlla le prove sospette in ${sus.map(d=>d.tab).join(", ")}: nel PDF finirebbero come risultati veri.`; return null; }
   const doc = buildPdf();
-  if(!doc){ msg.textContent = "Compila almeno un distretto per creare il PDF."; return; }
+  if(!doc){ msg.textContent = "Compila almeno un distretto per creare il PDF."; return null; }
   const who = $("#athName").value.trim().replace(/[^\p{L}\p{N} ]/gu,"").trim() || "atleta";
   const d = /^\d{4}-\d{2}-\d{2}$/.test(state.date) ? itDate(state.date) : new Date().toLocaleDateString("it-IT");
-  try{
-    await saveFile(`Valutazione forza ${who} ${d.replace(/\//g,"-")}.pdf`, doc.output("arraybuffer"), "application/pdf");
-    msg.textContent = "PDF salvato.";
-  }catch(err){ msg.textContent = saveErr(err); }
+  return {name:`Valutazione forza ${who} ${d.replace(/\//g,"-")}.pdf`, bytes:doc.output("arraybuffer")};
+}
+$("#btnPdf").addEventListener("click", async ()=>{
+  const f = makePdf(); if(!f) return;
+  try{ await saveFile(f.name, f.bytes, "application/pdf"); $("#pdfMsg").textContent = "PDF salvato."; }
+  catch(err){ $("#pdfMsg").textContent = saveErr(err); }
+});
+const canShareFiles = () => { try{ return !!(navigator.canShare && navigator.canShare({files:[new File([""], "x.pdf", {type:"application/pdf"})]})); }catch(e){ return false; } };
+if(canShareFiles()){ $("#btnShare").hidden = false; $("#btnPdf").classList.remove("primary"); }
+$("#btnShare").addEventListener("click", async ()=>{
+  const f = makePdf(); if(!f) return;
+  const file = new File([f.bytes], f.name, {type:"application/pdf"});
+  try{ await navigator.share({files:[file], title:f.name.replace(/\.pdf$/,"")}); $("#pdfMsg").textContent = "PDF condiviso."; }
+  catch(err){
+    if(err && err.name==="AbortError") return;
+    $("#pdfMsg").textContent = "Qui la condivisione non è disponibile: usa Scarica PDF.";
+  }
 });
 
 /* App installabile: registra il service worker solo quando la pagina è servita da un sito (es. GitHub Pages) */
