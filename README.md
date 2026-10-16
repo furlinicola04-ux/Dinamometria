@@ -15,3 +15,8 @@ I dati restano sul computer: la pagina non invia niente a nessun server.
    - **Android (Chrome)**: menu ⋮ → "Installa app" (o "Aggiungi a schermata Home").
 
 L'app si apre a schermo intero e funziona anche offline. Il registro CSV si importa e si salva dai file del telefono (app File / Download).
+
+## Provare la pagina con dati estremi
+
+`dev/break-ui.html` apre la pagina con un interruttore in basso: *Demo*, *Caso peggiore*, *Vuoto*, *Registro da Excel* e *Registro grande*. I dati sono in `dev/fixtures.js` e sono casi realistici: una prova battuta senza virgola (235 invece di 23,5), un registro risalvato da Excel, un nome con lettere rumene nel PDF, 18.000 righe di registro. Ogni volta che cambi `index.html`, passa da tutti e cinque per controllare che niente si rompa. È solo uno strumento di prova: l'app non lo usa e non lo mette nella cache offline.
+

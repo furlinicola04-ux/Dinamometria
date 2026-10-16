@@ -55,7 +55,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.47 var(--f-body)
 .wrap{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
 h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance}
 /* Titolo grande (large title) con tracking negativo, come Rehab */
-h1{font-size:2.125rem;line-height:1.1;font-weight:700;letter-spacing:-.02em;margin:6px 0 6px}
+h1{font-size:2.125rem;line-height:1.1;font-weight:700;letter-spacing:-.02em;margin:6px 0 6px;overflow-wrap:anywhere;hyphens:auto}
 h2{font-size:1.3rem;line-height:1.2;font-weight:700;letter-spacing:-.01em}
 h3{font-size:1.02rem;line-height:1.3;font-weight:650}
 p{margin:0}
@@ -70,10 +70,11 @@ header::before{content:"";display:block;width:36px;height:5px;border-radius:99px
 .top{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
 .field{display:flex;flex-direction:column;gap:4px;min-width:0}
 .grow{flex:1 1 130px}
+.grow.code{flex-basis:170px}
 label,.lab{font-size:.81rem;font-weight:500;color:var(--muted)}
 /* Campi: almeno 16px, altrimenti Safari su iPhone ingrandisce la pagina quando li tocchi */
 input[type=text],input[type=date]{font:inherit;font-size:1.25rem;font-variant-numeric:tabular-nums;color:var(--ink);background:var(--sunk);border:0;border-radius:10px;padding:8px 12px;width:100%;min-width:0;height:48px}
-input.txt{font-size:1rem}
+input.txt{font-size:1rem;font-variant-numeric:normal}
 /* iOS Safari disegna il campo data con il suo stile nativo e ignora larghezza e altezza: lo riportiamo al nostro */
 input[type=date]{font-size:1rem;-webkit-appearance:none;appearance:none;display:block;line-height:32px;max-width:100%;text-align:left}
 input[type=date]::-webkit-date-and-time-value{text-align:left;margin:0;min-height:32px}
@@ -82,7 +83,7 @@ input::placeholder,textarea::placeholder{color:var(--muted);opacity:.7}
 textarea{font:inherit;font-size:1rem;color:var(--ink);background:var(--sunk);border:0;border-radius:10px;padding:10px 12px;width:100%;min-width:0;resize:vertical}
 textarea:focus,input[type=text]:focus,input[type=date]:focus{outline:none;box-shadow:0 0 0 2px var(--accent)}
 .unit{font-size:.78rem;color:var(--muted);font-weight:400}
-button,.btn{font:inherit;font-size:.94rem;font-weight:600;border-radius:99px;padding:0 16px;height:44px;cursor:pointer;border:0;background:var(--fill);color:var(--ink);display:inline-flex;align-items:center;justify-content:center}
+button,.btn{font:inherit;font-size:.94rem;font-weight:600;border-radius:99px;padding:6px 16px;min-height:44px;line-height:1.25;text-align:center;cursor:pointer;border:0;background:var(--fill);color:var(--ink);display:inline-flex;align-items:center;justify-content:center}
 button.primary{background:var(--accent-fill);color:var(--accent-ink)}
 .row-btns{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}
 
@@ -185,14 +186,14 @@ button:active,.btn:active,.tab:active{transform:scale(.96)}
 
 <div class="wrap">
   <header>
-    <span class="eyebrow">Strumento clinico · v0.8</span>
+    <span class="eyebrow">Strumento clinico · v0.9</span>
     <h1>Dinamometria isometrica</h1>
     <p class="muted">Valori in <b style="color:var(--ok)">verde</b>: target raggiunto o nel riferimento. <b style="color:var(--warn)">Giallo</b>: tra soglia e target o sotto il riferimento. <b style="color:var(--bad)">Rosso</b>: sotto soglia. Soglie del manuale non validate; riferimenti di letteratura: medie di atleti sani. I dati restano nel browser finché non salvi il registro CSV.</p>
   </header>
 
   <section class="box" aria-label="Paziente">
     <div class="top">
-      <div class="field grow">
+      <div class="field grow code">
         <label for="athId">Codice atleta</label>
         <input type="text" id="athId" class="txt" autocomplete="off" placeholder="R01" list="idList">
         <datalist id="idList"></datalist>
@@ -384,6 +385,8 @@ const sgn = (n,d=1) => Number.isFinite(n) ? (n>0?"+":n<0?"−":"±") + fmt(Math.
 function num(str){ const s = String(str ?? "").trim().replace(",","."); return /^\d*\.?\d+$/.test(s) ? parseFloat(s) : NaN; }
 function el(tag,cls,text){const e=document.createElement(tag); if(cls) e.className=cls; if(text!=null) e.textContent=text; return e;}
 const today = () => { const d = new Date(); return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10); };
+const pl = (n, one, many) => `${n.toLocaleString("it-IT")} ${n===1 ? one : many}`;
+const r1str = x => Number.isFinite(x) ? String(Math.round(x*10)/10).replace(".",",") : "";
 const itDate = iso => /^\d{4}-\d{2}-\d{2}$/.test(iso) ? iso.split("-").reverse().join("/") : iso;
 
 /* ---------- Stato in memoria ---------- */
@@ -430,8 +433,26 @@ function parseCSV(text){
   const head = rows.shift().map(h=>h.trim().toLowerCase());
   const miss = ["id_atleta","data","distretto","lato"].filter(c=>!head.includes(c));
   if(miss.length) throw new Error("colonne mancanti: " + miss.join(", "));
-  return rows.filter(r=>r.some(x=>x.trim()!==""))
+  const bad = [];
+  const out = rows.filter(r=>r.some(x=>x.trim()!==""))
     .map(r=>Object.fromEntries(COLS.map(c=>{ const i = head.indexOf(c); return [c, i<0 ? "" : (r[i] ?? "").trim()]; })));
+  out.forEach((r,k)=>{ const d = isoDate(r.data); if(d) r.data = d; else bad.push(k+2); });
+  out.badDates = bad;
+  return out;
+}
+/* Excel riscrive le date come gg/mm/aaaa (o g/m/aa): le riportiamo ad aaaa-mm-gg, altrimenti l'ordine delle sedute è sbagliato */
+function isoDate(s){
+  if(/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  const m = /^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2}|\d{4})$/.exec(s); if(!m) return "";
+  const y = m[3].length===2 ? 2000 + +m[3] : +m[3], mo = +m[2], d = +m[1];
+  if(mo<1 || mo>12 || d<1 || d>31) return "";
+  return `${y}-${String(mo).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+}
+/* Il registro dovrebbe essere UTF-8; se Excel l'ha salvato in Windows-1252 lo rileggiamo così (° e lettere accentate) */
+async function readText(file){
+  const buf = await file.arrayBuffer();
+  try{ return new TextDecoder("utf-8", {fatal:true}).decode(buf); }
+  catch(e){ return new TextDecoder("windows-1252").decode(buf); }
 }
 function toCSV(rows){
   const esc = v => /[;"\r\n]/.test(v) ? '"' + v.replace(/"/g,'""') + '"' : v;
@@ -480,8 +501,8 @@ function loadAthlete(id){
     const x = state.d[d.id];
     if(d.lateral){
       if(p.leso==="dx" || p.leso==="sx") x.side = p.leso;
-      x.lp = csvNum(String(p.l)); x.sp = csvNum(String(p.s));
-    } else x.base = csvNum(String(p.bil));
+      x.lp = r1str(p.l); x.sp = r1str(p.s);
+    } else x.base = r1str(p.bil);
     const r = rows.find(r=>r.distretto===d.id && r.data===p.date && r.posizione);
     if(r && r.posizione !== d.setup) x.pos = r.posizione;
   });
@@ -491,9 +512,9 @@ function regStatus(extra){
   const ids = [...new Set(registry.map(r=>r.id_atleta))].filter(Boolean).sort();
   const dl = $("#idList"); dl.replaceChildren(...ids.map(i=>{ const o = document.createElement("option"); o.value = i; return o; }));
   const sessions = new Set(registry.map(r=>r.id_atleta+"|"+r.data)).size;
-  $("#regMsg").textContent = (extra ? extra + " " : "") + (registry.length
-    ? `Registro: ${ids.length} atleti, ${sessions} sedute, ${registry.length} righe.`
-    : "Nessun registro importato.");
+  $("#regMsg").textContent = (extra ? extra + (registry.length ? " " : "") : "") + (registry.length
+    ? `Registro: ${pl(ids.length,"atleta","atleti")}, ${pl(sessions,"seduta","sedute")}, ${pl(registry.length,"riga","righe")}.`
+    : (extra ? "" : "Nessun registro importato."));
 }
 
 /* Salvataggio file: dentro Claude usa il permesso "downloads", altrimenti un normale download del browser */
@@ -595,6 +616,30 @@ function peakLabel(key, avg, max, cv, n){
   p.append("media ", el("b",null,fmt(avg,1)+" kg"), " · picco ", el("b",null,fmt(max,1)+" kg"));
   if(n>=2) p.append(` · CV ${fmt(cv,1)}%`);
 }
+/* ---------- Controllo dei valori ----------
+   Una prova più del doppio (o meno della metà) della media delle altre è quasi sempre un errore di battitura (es. 235 invece di 23,5). */
+const TRIAL_MAX = 300, W_MIN = 35, W_MAX = 180;
+function suspectTrials(arr){
+  const v = arr.map(num).filter(Number.isFinite), out = [];
+  v.forEach((x,i)=>{
+    if(x > TRIAL_MAX){ out.push(x); return; }
+    const o = v.filter((_,j)=>j!==i); if(!o.length) return;
+    const m = o.reduce((a,b)=>a+b,0)/o.length;
+    if(m>0 && (x > 2*m || x < m/2) && o.every(y=> y<=2*m && y>=m/2)) out.push(x);
+  });
+  return out;
+}
+function checkFlags(d, out){
+  const x = state.d[d.id], arrs = d.lateral ? [x.l, x.s] : [x.v];
+  const sus = arrs.flatMap(suspectTrials);
+  if(sus.length) out.appendChild(el("p","flag bad",`Controlla le prove: ${sus.map(n=>fmt(n,1)+" kg").join(", ")} ${sus.length>1?"sembrano":"sembra"} un errore di battitura (troppo lontano dalle altre prove o sopra ${TRIAL_MAX} kg). Finché non lo correggi i risultati restano grigi.`));
+  const pains = (d.lateral ? [x.lpain, x.spain] : [x.vpain]).map(num).filter(Number.isFinite);
+  if(pains.some(n=>n>10)) out.appendChild(el("p","flag","Il dolore NRS va da 0 a 10: controlla il valore inserito."));
+  return sus.length > 0;
+}
+let neutral = false;   /* true = valori sospetti, niente colori di giudizio */
+const judge = st => neutral ? null : st;
+
 /* ---------- Colori del riepilogo ----------
    Forza relativa: soglie del manuale se esistono, altrimenti l'intervallo di letteratura.
    Forza assoluta: soglia del manuale in kg (quadricipite) o riferimento di letteratura in kg.
@@ -615,6 +660,7 @@ const lsiStatus = lsi => r2(lsi)>=LSI_CUT ? {cls:"ok", txt:`≥ ${LSI_CUT}%`} : 
 const defStatus = pct => r2(pct)<=100-LSI_CUT ? {cls:"ok", txt:`≤ ${100-LSI_CUT}%`} : {cls:"bad", txt:`Oltre ${100-LSI_CUT}%`};
 
 function cell(v, u, st, wide){
+  st = judge(st);
   const c = el("div","cell"+(st && st.cls!=="neu" ? " "+st.cls : "")+(wide?" wide":""), v);
   if(u) c.appendChild(el("small",null,u));
   if(st){ c.appendChild(el("span","sr"," ("+st.txt+")")); c.title = st.txt; }
@@ -640,7 +686,7 @@ function delta(label, before, after, unit, dec, pct){
   /* variazioni minime (< 2% della forza o < 1 punto di LSI) restano grigie: sono dentro l'errore di misura */
   const flat = pct ? Math.abs(rel) < 2 : Math.abs(d) < 1;
   const arrow = flat ? "≈" : d>0 ? "▲" : "▼";
-  const cls = flat ? "neu" : d>0 ? "ok" : "bad";
+  const cls = flat || neutral ? "neu" : d>0 ? "ok" : "bad";
   const txt = `${arrow} ${sgn(d,dec)} ${unit}` + (pct && Number.isFinite(rel) ? ` (${sgn(rel)}%)` : "");
   const ch = el("span","chip "+cls, txt); r.appendChild(ch);
   r.appendChild(el("span","delta-v",`prima ${fmt(before,dec)} ${unit} → oggi ${fmt(after,dec)} ${unit}`));
@@ -658,7 +704,7 @@ function litCol(ref, rows, noLitTxt){
   const rt = `media del gruppo ${fmt(ref.mean,dd)} ${u}` + (ref.lo!=null ? ` (intervallo ${fmt(ref.lo,dd)}–${fmt(ref.hi,dd)})` : "");
   rows.forEach(r=>{
     const v = ref.kind==="rel" ? r.rel : r.kg;
-    if(Number.isFinite(v)) c.appendChild(item(`${r.name}: ${fmt(v/ref.mean*100,0)}% della media`, `paziente ${fmt(v,dd)} ${u} · ${rt}`, calc.lit(v,ref)));
+    if(Number.isFinite(v)) c.appendChild(item(`${r.name}: ${fmt(v/ref.mean*100,0)}% della media`, `paziente ${fmt(v,dd)} ${u} · ${rt}`, judge(calc.lit(v,ref))));
   });
   c.appendChild(el("p","note","Gruppo di riferimento: " + ref.label));
   return c;
@@ -668,7 +714,7 @@ function litCol(ref, rows, noLitTxt){
 function renderHistory(d, out){
   const id = state.id.trim(); if(!id || !registry.length) return;
   const h = history(id, d.id, state.date); if(!h.length) return;
-  const c = col("Storico dal registro", `${h.length} sedute · ${aggName()}`);
+  const c = col("Storico dal registro", `${pl(h.length,"seduta","sedute")} · ${aggName()}`);
   h.slice(-6).forEach(p=>{
     if(d.lateral){
       const lsi = Number.isFinite(p.l) && Number.isFinite(p.s) && p.s>0 ? calc.lsi(p.l,p.s) : NaN;
@@ -686,8 +732,11 @@ function renderLateral(d, w, out){
   peakLabel("l", v.lavg, v.lmax, v.lcv, v.ln); peakLabel("s", v.savg, v.smax, v.scv, v.sn);
   const hasL = Number.isFinite(v.l), hasS = Number.isFinite(v.s);
   if(!hasL && !hasS){ out.appendChild(el("p","empty","Inserisci almeno una prova per vedere i risultati.")); return; }
-  const relL = calc.rel(v.l,w), relS = calc.rel(v.s,w);
+  neutral = checkFlags(d, out);
+  const relL = calc.rel(v.l,w), relS = calc.rel(v.s,w), hasRL = Number.isFinite(relL), hasRS = Number.isFinite(relS);
   const hasLsi = hasL && hasS && v.s>0, lsi = hasLsi ? calc.lsi(v.l,v.s) : NaN;
+  if(!neutral && hasLsi && lsi > 150){ neutral = true;
+    out.appendChild(el("p","flag bad",`LSI del ${fmt(lsi,0)}%: un lato vale più del doppio dell'altro. Controlla le prove e il lato leso; finché non è chiaro i risultati restano grigi.`)); }
   const defKg = hasLsi ? Math.max(calc.defKg(v.l,v.s),0) : NaN, defPct = hasLsi ? Math.max(calc.defPct(v.l,v.s),0) : NaN;
   const A = aggName(), Acap = A==="media" ? "Media" : "Picco";
 
@@ -696,13 +745,14 @@ function renderLateral(d, w, out){
   const t = el("div","tbl");
   t.append(el("span"), el("span","th",`Leso · ${side}`), el("span","th",`Sano · ${other}`));
   t.append(tk(`${Acap} forza`, "assoluta"), cell(hasL?fmt(v.l,1):"–","kg",kgStatus(d.id,v.l)), cell(hasS?fmt(v.s,1):"–","kg",kgStatus(d.id,v.s)));
-  t.append(tk("Forza relativa", "forza ÷ peso"), cell(hasL?fmt(relL):"–","kgf/kg",relStatus(d.id,relL)), cell(hasS?fmt(relS):"–","kgf/kg",relStatus(d.id,relS)));
+  t.append(tk("Forza relativa", "forza ÷ peso"), cell(hasRL?fmt(relL):"–","kgf/kg",relStatus(d.id,relL)), cell(hasRS?fmt(relS):"–","kgf/kg",relStatus(d.id,relS)));
   t.append(tk("LSI", "leso ÷ sano"), cell(hasLsi?fmt(lsi,1):"–","%",hasLsi?lsiStatus(lsi):null,true));
   t.append(tk("Deficit", "quanto manca al leso"), cell(hasLsi?fmt(defKg,1):"–","kg",hasLsi?defStatus(defPct):null), cell(hasLsi?fmt(defPct,1):"–","%",hasLsi?defStatus(defPct):null));
   out.appendChild(t);
   out.appendChild(legend());
   const why = [];
-  if(m) why.push(`Forza relativa: soglia ${m.min!=null?fmt(m.min)+" e ":""}target ${fmt(m.target)} kgf/kg del manuale.`);
+  if(!Number.isFinite(w)) why.push("Forza relativa: inserisci il peso del paziente per calcolarla.");
+  else if(m) why.push(`Forza relativa: ${m.min!=null?"soglia "+fmt(m.min)+" e ":""}target ${fmt(m.target)} kgf/kg del manuale.`);
   else if(ref && ref.kind==="rel" && ref.lo!=null) why.push(`Forza relativa: intervallo di atleti sani (${ref.cite}), il manuale non ha soglie.`);
   else why.push("Forza relativa: nessuna soglia disponibile per questo distretto, resta grigia.");
   if(m && m.absMin!=null) why.push(`Forza assoluta: ${m.absMin} kg minimi sul lato leso (manuale).`);
@@ -715,20 +765,21 @@ function renderLateral(d, w, out){
   const prevLsi = Number.isFinite(v.lp) && Number.isFinite(v.sp) && v.sp>0 ? calc.lsi(v.lp,v.sp) : NaN;
   if(hasLp || hasSp){
     const c = col("Rispetto alla visita precedente");
-    if(Number.isFinite(prevLsi) && hasLsi){
-      const gap = LSI_CUT - lsi;
-      c.appendChild(el("p",null, lsi>prevLsi+0.05
-        ? `L'LSI è salito da ${fmt(prevLsi,0)}% a ${fmt(lsi,0)}%. ` + (gap>0 ? `Mancano ${fmt(gap,0)} punti al ${LSI_CUT}%.` : `Ha superato il ${LSI_CUT}%.`)
-        : lsi<prevLsi-0.05 ? `L'LSI è sceso da ${fmt(prevLsi,0)}% a ${fmt(lsi,0)}%.` : `L'LSI è stabile a ${fmt(lsi,0)}%.`));
-      c.appendChild(delta("LSI", prevLsi, lsi, "punti", 1, false));
+    if(Number.isFinite(prevLsi) && hasLsi && !neutral){
+      /* confronto sui valori arrotondati, così la frase non dice mai "sceso da 62% a 62%" */
+      const a = Math.round(prevLsi), b = Math.round(lsi), gap = LSI_CUT - b;
+      c.appendChild(el("p",null, b>a
+        ? `L'LSI è salito da ${a}% a ${b}%. ` + (gap>0 ? `Mancano ${gap} punti al ${LSI_CUT}%.` : `Ha superato il ${LSI_CUT}%.`)
+        : b<a ? `L'LSI è sceso da ${a}% a ${b}%.` : `L'LSI è stabile a ${b}%.`));
     }
+    if(Number.isFinite(prevLsi) && hasLsi) c.appendChild(delta("LSI", prevLsi, lsi, "punti", 1, false));
     if(hasLp) c.appendChild(delta(`Lato leso · ${side}`, v.lp, v.l, "kg", 1, true));
     if(hasSp) c.appendChild(delta(`Lato sano · ${other}`, v.sp, v.s, "kg", 1, true));
     if(hasLp && hasSp && v.s - v.sp > 0.1*v.sp) c.appendChild(el("p","note","Anche il lato sano è cresciuto di oltre il 10%: parte del cambiamento dell'LSI dipende dal lato sano (Moran 2022)."));
     if(hasLsi){
       const wrap = el("div"), bar = el("div","bar"), max = 120;
       const f = el("div","bar-fill"); f.style.width = Math.max(0,Math.min(lsi,max))/max*100+"%";
-      f.style.background = r2(lsi)>=LSI_CUT ? "var(--ok)" : "var(--bad)";
+      f.style.background = neutral ? "var(--muted)" : r2(lsi)>=LSI_CUT ? "var(--ok)" : "var(--bad)";
       const mk = el("div","bar-mark"); mk.style.left = LSI_CUT/max*100+"%";
       bar.append(f, mk);
       if(Number.isFinite(prevLsi)){ const pv = el("div","bar-prev"); pv.style.left = Math.max(0,Math.min(prevLsi,max))/max*100+"%"; bar.appendChild(pv); }
@@ -745,15 +796,17 @@ function renderLateral(d, w, out){
   const cmp = el("div","cmp");
   if(m){
     const cM = col("Soglie del manuale","non validate");
-    cM.appendChild(el("p","note",`Forza relativa: sotto ${m.min!=null?fmt(m.min)+" è deficitaria, da "+fmt(m.target):fmt(m.target)} kgf/kg l'obiettivo è raggiunto.`));
-    if(hasL) cM.appendChild(item(`Leso ${fmt(relL)} kgf/kg`, calc.man(relL,m).txt.toLowerCase(), calc.man(relL,m)));
-    if(hasS) cM.appendChild(item(`Sano ${fmt(relS)} kgf/kg`, calc.man(relS,m).txt.toLowerCase(), calc.man(relS,m)));
-    if(hasLsi) cM.appendChild(item(`LSI ${fmt(lsi,1)}%`, `criterio di rientro ≥ ${LSI_CUT}% (95% per sport ad alto impatto)`, lsiStatus(lsi)));
+    cM.appendChild(el("p","note", m.min!=null
+      ? `Forza relativa: sotto ${fmt(m.min)} kgf/kg è deficitaria, da ${fmt(m.target)} kgf/kg l'obiettivo è raggiunto.`
+      : `Forza relativa: da ${fmt(m.target)} kgf/kg in su l'obiettivo è raggiunto, sotto è deficitaria.`));
+    if(hasRL) cM.appendChild(item(`Leso ${fmt(relL)} kgf/kg`, calc.man(relL,m).txt.toLowerCase(), judge(calc.man(relL,m))));
+    if(hasRS) cM.appendChild(item(`Sano ${fmt(relS)} kgf/kg`, calc.man(relS,m).txt.toLowerCase(), judge(calc.man(relS,m))));
+    if(hasLsi) cM.appendChild(item(`LSI ${fmt(lsi,1)}%`, `criterio di rientro ≥ ${LSI_CUT}% (95% per sport ad alto impatto)`, judge(lsiStatus(lsi))));
     cmp.appendChild(cM);
   } else {
     const cM = col("Soglie del manuale");
     cM.appendChild(el("p","note","Il manuale non prevede soglie di forza per questo distretto: vale solo il criterio di simmetria."));
-    if(hasLsi) cM.appendChild(item(`LSI ${fmt(lsi,1)}%`, `criterio generico ≥ ${LSI_CUT}%`, lsiStatus(lsi)));
+    if(hasLsi) cM.appendChild(item(`LSI ${fmt(lsi,1)}%`, `criterio generico ≥ ${LSI_CUT}%`, judge(lsiStatus(lsi))));
     cmp.appendChild(cM);
   }
   const cL = litCol(ref, [{name:"Leso", rel:relL, kg:v.l},{name:"Sano", rel:relS, kg:v.s}], NO_LIT[d.id]);
@@ -765,7 +818,9 @@ function renderLateral(d, w, out){
   if((v.ln>=2 && v.lcv>CV_CUT) || (v.sn>=2 && v.scv>CV_CUT))
     out.appendChild(el("p","flag",`Prove poco coerenti (CV oltre il ${CV_CUT}%, soglia convenzionale): valuta una prova in più o controlla il setup.`));
   const floor = m ? (m.min ?? m.target) : null;
-  if(hasLsi && r2(lsi)>=LSI_CUT && ((floor!=null && r2(relS) < floor) || (ref && ref.lo!=null && r2(ref.kind==="rel"?relS:v.s) < r2(ref.lo))))
+  if(!neutral && hasLsi && r2(lsi) > 110)
+    out.appendChild(el("p","flag","Il lato leso è più forte del sano di oltre il 10%: controlla di aver scelto il lato leso giusto."));
+  if(!neutral && hasLsi && r2(lsi)>=LSI_CUT && ((floor!=null && hasRS && r2(relS) < floor) || (ref && ref.lo!=null && r2(ref.kind==="rel"?relS:v.s) < r2(ref.lo))))
     out.appendChild(el("p","flag","Simmetrico ma debole: anche il lato sano è sotto soglia o sotto il riferimento, quindi l'LSI può sovrastimare il recupero (Moran 2022)."));
   if(num(state.d[d.id].lpain) >= 3)
     out.appendChild(el("p","flag","Dolore ≥ 3/10 durante il test del lato leso: la forza misurata può essere sottostimata dall'inibizione da dolore."));
@@ -780,30 +835,31 @@ function renderAdd(w, out){
   const v = vals("add"), m = MAN.add, ref = litRef("add", state.sex);
   peakLabel("v", v.avg, v.max, v.cv, v.n);
   if(!Number.isFinite(v.peak)){ out.appendChild(el("p","empty","Test bilaterale: niente LSI. Inserisci almeno una prova e, se la conosci, la baseline del paziente per vedere il calo.")); return; }
-  const rel = calc.rel(v.peak,w), hasB = Number.isFinite(v.base) && v.base>0;
+  neutral = checkFlags(DISTRICTS.find(d=>d.id==="add"), out);
+  const rel = calc.rel(v.peak,w), hasR = Number.isFinite(rel), hasB = Number.isFinite(v.base) && v.base>0;
   const drop = hasB ? v.base - v.peak : NaN, dropPct = hasB ? drop/v.base*100 : NaN;
   const A = aggName(), Acap = A==="media" ? "Media" : "Picco";
   out.appendChild(secHead("Risultati", `Calcolati sulla ${A==="media"?"media delle prove":"prova migliore (picco)"}. Test bilaterale: niente LSI, si guarda il calo rispetto alla baseline.`));
   const t = el("div","tbl");
   t.style.gridTemplateColumns = "minmax(0,1.1fr) minmax(0,2fr)";
   t.append(tk(`${Acap} forza`, "assoluta"), cell(fmt(v.peak,1),"kg",kgStatus("add",v.peak)));
-  t.append(tk("Forza relativa", "forza ÷ peso"), cell(fmt(rel),"kgf/kg",calc.man(rel,m)));
+  t.append(tk("Forza relativa", "forza ÷ peso"), cell(fmt(rel),"kgf/kg",hasR ? calc.man(rel,m) : null));
   if(hasB){
     const st = drop>=3 || dropPct>15 ? {cls:"bad",txt:"Calo rilevante"} : {cls:"ok",txt:"Nessun calo rilevante"};
     t.append(tk("Rispetto alla baseline", `abituale ${fmt(v.base,1)} kg`), cell(`${sgn(-drop)} kg · ${sgn(-dropPct)}%`, "allarme: calo ≥ 3 kg o > 15%", st));
   }
   out.appendChild(t);
   out.appendChild(legend());
-  out.appendChild(el("p","note",`Forza relativa: soglia ${fmt(m.min)} e target ${fmt(m.target)} kgf/kg del manuale. Forza assoluta: intervallo di atleti sani (${ref.cite}).`));
+  out.appendChild(el("p","note",(hasR ? `Forza relativa: soglia ${fmt(m.min)} e target ${fmt(m.target)} kgf/kg del manuale.` : "Forza relativa: inserisci il peso del paziente per calcolarla.") + ` Forza assoluta: intervallo di atleti sani (${ref.cite}).`));
   renderHistory(DISTRICTS.find(d=>d.id==="add"), out);
   out.appendChild(secHead("Confronto con i riferimenti", "A sinistra le soglie cliniche del tuo manuale. A destra quanto è forte il paziente rispetto ad atleti sani studiati in letteratura."));
   const cmp = el("div","cmp");
   const cM = col("Soglie del manuale","non validate");
   cM.appendChild(el("p","note",`Forza relativa: sotto ${fmt(m.min)} è deficitaria, da ${fmt(m.target)} kgf/kg l'obiettivo è raggiunto. Un calo di 3 kg o più dalla baseline è un campanello d'allarme.`));
-  cM.appendChild(item(`Squeeze ${fmt(rel)} kgf/kg`, calc.man(rel,m).txt.toLowerCase(), calc.man(rel,m)));
-  if(hasB) cM.appendChild(item(`Calo ${fmt(Math.max(drop,0),1)} kg`, "allarme da 3 kg in su", drop>=3?{cls:"bad",txt:"Calo ≥ 3 kg"}:{cls:"ok",txt:"Calo < 3 kg"}));
+  if(hasR) cM.appendChild(item(`Squeeze ${fmt(rel)} kgf/kg`, calc.man(rel,m).txt.toLowerCase(), judge(calc.man(rel,m))));
+  if(hasB) cM.appendChild(item(`Calo ${fmt(Math.max(drop,0),1)} kg`, "allarme da 3 kg in su", judge(drop>=3?{cls:"bad",txt:"Calo ≥ 3 kg"}:{cls:"ok",txt:"Calo < 3 kg"})));
   const cL = litCol(ref, [{name:"Squeeze", rel, kg:v.peak}]);
-  if(hasB) cL.insertBefore(item(`Calo ${fmt(Math.max(dropPct,0),1)}%`, "rilevante oltre il 15% (Wollin 2017)", dropPct>15?{cls:"bad",txt:"Calo > 15%"}:{cls:"ok",txt:"Calo ≤ 15%"}), cL.lastChild);
+  if(hasB) cL.insertBefore(item(`Calo ${fmt(Math.max(dropPct,0),1)}%`, "rilevante oltre il 15% (Wollin 2017)", judge(dropPct>15?{cls:"bad",txt:"Calo > 15%"}:{cls:"ok",txt:"Calo ≤ 15%"})), cL.lastChild);
   cmp.append(cM, cL); out.appendChild(cmp);
   if(v.n>=2 && v.cv>CV_CUT) out.appendChild(el("p","flag",`Prove poco coerenti (CV oltre il ${CV_CUT}%, soglia convenzionale): valuta una prova in più o controlla il setup.`));
 }
@@ -834,7 +890,7 @@ function renderRatio(d, out){
     const v = r2(r.v); let st;
     if(p.name==="H:Q") st = v<0.60 ? {cls:"bad",txt:"Sotto 0,60"} : (v<0.65 ? {cls:"warn",txt:"Tra 0,60 e 0,65"} : {cls:"ok",txt:"≥ 0,65"});
     else st = (v>=0.66 && v<=0.75) ? {cls:"neu",txt:"Nel range del manuale"} : {cls:"neu",txt:"Fuori range del manuale"};
-    c.appendChild(item(`${r.side==="dx"?"Dx":"Sx"}${r.injured?" (leso)":" (sano)"}: ${fmt(r.v)}`, null, st));
+    c.appendChild(item(`${r.side==="dx"?"Dx":"Sx"}${r.injured?" (leso)":" (sano)"}: ${fmt(r.v)}`, null, judge(st)));
   });
   c.appendChild(el("p","note", p.name==="H:Q"
     ? "Manuale: ≥ 0,60–0,65. In letteratura 0,60 è la soglia d'uso (Peek 2018), ma il 37–44% degli atleti sani sta sotto (Owoeye 2024): è un segnale, non un criterio."
@@ -845,11 +901,14 @@ function renderRatio(d, out){
 /* ---------- Render ---------- */
 function render(){
   const out = $("#out"); out.replaceChildren();
-  const d = DISTRICTS.find(x=>x.id===current), w = num(state.weight);
-  if(!Number.isFinite(w) || w<=0){
-    out.appendChild(el("p","empty","Inserisci il peso del paziente per calcolare la forza relativa."));
-  } else if(d.lateral){ renderLateral(d, w, out); renderRatio(d, out); }
+  const d = DISTRICTS.find(x=>x.id===current), w0 = num(state.weight), w = w0>0 ? w0 : NaN;
+  neutral = false;
+  /* senza peso si vedono comunque kg, LSI e deficit: manca solo la forza relativa */
+  if(!Number.isFinite(w) && filled(d.id)) out.appendChild(el("p","flag","Manca il peso del paziente: kg, LSI e deficit sono calcolati, la forza relativa no."));
+  if(Number.isFinite(w) && (w<W_MIN || w>W_MAX)) out.appendChild(el("p","flag",`Peso di ${fmt(w,1)} kg: controlla che non manchi la virgola.`));
+  if(d.lateral){ renderLateral(d, w, out); renderRatio(d, out); }
   else renderAdd(w, out);
+  neutral = false;
   DISTRICTS.forEach(dd=>{ document.querySelector(`#tab-${dd.id} .dot`).hidden = !filled(dd.id); });
 }
 
@@ -870,8 +929,10 @@ $("#btnClear").addEventListener("click",()=>{
 $("#csvIn").addEventListener("change", async e=>{
   const file = e.target.files[0]; e.target.value = ""; if(!file) return;
   try{
-    registry = parseCSV(await file.text());
-    regStatus(`Importato "${file.name}".`);
+    registry = parseCSV(await readText(file));
+    const bd = registry.badDates;
+    regStatus(!registry.length ? `Il file "${file.name}" non contiene sedute: è un registro nuovo, le sedute che salvi verranno aggiunte qui.`
+      : `Importato "${file.name}".` + (bd.length ? ` Attenzione: data non riconosciuta alle righe ${bd.slice(0,5).join(", ")}${bd.length>5?"…":""}.` : ""));
     render();
   }catch(err){ $("#regMsg").textContent = `Non riesco a leggere il file: ${err.message}.`; }
 });
@@ -901,7 +962,14 @@ $("#btnSave").addEventListener("click", async ()=>{
 });
 
 /* ---------- PDF per l'atleta ---------- */
-const pdfText = s => String(s).replace(/[−–]/g,"-").replace(/≥/g,">=").replace(/≤/g,"<=").replace(/[  ]/g," ");
+/* Il font del PDF (Helvetica) conosce solo le lettere dell'Europa occidentale: le altre perdono il segno diacritico
+   (Ș→S, ă→a), le emoji si tolgono. Le lettere italiane restano come sono. */
+const PDF_OK = /[\u0000-\u00FF‘’‚“”„…•€™]/;
+const pdfText = s => String(s).replace(/[−–—]/g,"-").replace(/≥/g,">=").replace(/≤/g,"<=").replace(/[  ]/g," ")
+  .replace(/→/g,"->").replace(/←/g,"<-")
+  .replace(/[\p{Extended_Pictographic}\u200D\uFE0F]/gu,"")
+  .replace(/./gsu, c => PDF_OK.test(c) ? c : c.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^\u0000-\u00FF]/g,""))
+  .replace(/ {2,}/g," ");
 function buildPdf(){
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({unit:"mm", format:"a4"});
@@ -927,7 +995,7 @@ function buildPdf(){
   doc.setFont("helvetica","bold"); doc.setFontSize(18); doc.setTextColor(...INK);
   T("Valutazione della forza isometrica", M, y); y += 7;
   doc.setFont("helvetica","normal"); doc.setFontSize(10); doc.setTextColor(...MUT);
-  T([name ? `Atleta: ${name}` : null, `Data: ${date}`, `Peso: ${fmt(w,1)} kg`].filter(Boolean).join("     "), M, y); y += 10;
+  T([name ? `Atleta: ${name}` : null, `Data: ${date}`, Number.isFinite(w) ? `Peso: ${fmt(w,1)} kg` : null].filter(Boolean).join("     "), M, y); y += 10;
 
   /* Tabella dei test */
   const cols = [{h:"Distretto",w:40},{h:"Lato infortunato",w:29},{h:"Lato sano",w:29},{h:"LSI",w:20},{h:"Deficit",w:24},{h:"Rispetto a prima",w:38}];
