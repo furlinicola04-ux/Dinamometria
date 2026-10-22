@@ -166,6 +166,8 @@ button.primary{background:var(--accent-fill);color:var(--accent-ink)}
 .delta-k{font-weight:600}
 .delta-v{font-size:.81rem;color:var(--muted);grid-column:1;font-variant-numeric:tabular-nums}
 .delta .chip{grid-row:1 / span 2;grid-column:2}
+/* Con il testo al 200% (schermo largo circa 195 px) la variazione va sotto l'etichetta invece di uscire dallo schermo */
+@media (max-width:260px){#timer .prev{grid-template-columns:minmax(0,1fr)}.delta{grid-template-columns:minmax(0,1fr)}.delta .chip{grid-row:auto;grid-column:1;justify-self:start;white-space:normal}}
 .sec-h{display:flex;flex-direction:column;gap:2px;margin-top:6px}
 .flag{background:var(--warn-soft);color:var(--ink);padding:10px 14px;border-radius:12px;font-size:.88rem;line-height:1.4}
 .flag.bad{background:var(--bad-soft)}
@@ -180,13 +182,30 @@ button:active,.btn:active,.tab:active{transform:scale(.96)}
 @media (hover:hover) and (pointer:fine){button:hover,.btn:hover{filter:brightness(.97)}}
 @media (prefers-reduced-motion:no-preference){.bar-fill{transition:width .25s ease}}
 @media (prefers-reduced-motion:reduce){button:active,.btn:active,.tab:active{transform:none}}
+
+/* Cronometro: contrazione (colore pieno) e riposo (colore tenue), così si capisce anche a colpo d'occhio e col telefono in silenzioso */
+.tm{display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 14px 18px;border-radius:12px;background:var(--sunk);color:var(--ink);transition:background-color 150ms ease-out}
+.tm[data-phase="work"]{background:var(--accent-fill);color:#fff}
+.tm[data-phase="rest"]{background:var(--accent-soft);color:var(--ink)}
+.tm[data-phase="prep"]{background:var(--accent-soft);color:var(--ink);box-shadow:inset 0 0 0 3px var(--accent-fill)}
+.tm-phase{font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;opacity:.8}
+.tm-num{font-size:4.25rem;line-height:1;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.tm .bar{width:100%;background:color-mix(in srgb,currentColor 18%,transparent)}
+.tm .bar-fill{background:currentColor}
+.tm-go{height:64px;font-size:1.1rem;width:100%}
+.tm-pill{position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:20;height:48px;padding:0 22px;gap:10px;
+  background:var(--sunk);color:var(--ink);box-shadow:0 2px 12px rgba(0,0,0,.22);font-variant-numeric:tabular-nums;white-space:nowrap}
+.tm-pill[data-phase="work"]{background:var(--accent-fill);color:#fff}
+.tm-pill[data-phase="rest"],.tm-pill[data-phase="prep"]{background:var(--accent-soft)}
+#timer .prev{grid-template-columns:repeat(3,minmax(0,1fr))}
+.tm-pill:active{transform:translateX(-50%) scale(.96)}
 </style>
 </head>
 <body>
 
 <div class="wrap">
   <header>
-    <span class="eyebrow">Strumento clinico · v1.1</span>
+    <span class="eyebrow">Strumento clinico · v1.3</span>
     <h1>Dinamometria isometrica</h1>
     <p class="muted">Valori in <b style="color:var(--ok)">verde</b>: target raggiunto o nel riferimento. <b style="color:var(--warn)">Giallo</b>: tra soglia e target o sotto il riferimento. <b style="color:var(--bad)">Rosso</b>: sotto soglia. Soglie del manuale non validate; riferimenti di letteratura: medie di atleti sani.</p>
     <p class="muted">L'app non salva niente: con <b>Nuovo paziente</b> o chiudendo la pagina i dati si cancellano. Prima scarica o condividi il PDF.</p>
@@ -226,6 +245,32 @@ button:active,.btn:active,.tab:active{transform:scale(.96)}
       <p class="note">Forza relativa, LSI e deficit si calcolano su questo valore. Le soglie del manuale sono pensate sul picco.</p>
     </div>
   </section>
+
+  <section class="box" id="timer" aria-labelledby="timer-h">
+    <h2 id="timer-h">Cronometro</h2>
+    <div class="tm" id="tmFace" data-phase="idle">
+      <span class="tm-phase" id="tmPhase" aria-live="polite">Pronto</span>
+      <span class="tm-num" id="tmNum" aria-hidden="true">5</span>
+      <div class="bar" aria-hidden="true"><div class="bar-fill" id="tmBar" style="width:0"></div></div>
+    </div>
+    <button type="button" class="primary tm-go" id="tmGo">Avvia contrazione</button>
+    <div class="prev">
+      <div class="field">
+        <label for="tmPrep">Preparazione <span class="unit">secondi</span></label>
+        <input type="text" id="tmPrep" inputmode="numeric" autocomplete="off" value="5">
+      </div>
+      <div class="field">
+        <label for="tmWork">Contrazione <span class="unit">secondi</span></label>
+        <input type="text" id="tmWork" inputmode="numeric" autocomplete="off" value="5">
+      </div>
+      <div class="field">
+        <label for="tmRest">Riposo <span class="unit">secondi</span></label>
+        <input type="text" id="tmRest" inputmode="numeric" autocomplete="off" value="45">
+      </div>
+    </div>
+    <p class="note">Premi Avvia: parte la preparazione, con un tono per ognuno degli ultimi tre secondi; spingi al tono acuto. Il tono lungo chiude la contrazione e parte il riposo; due toni brevi dicono che puoi fare la prova dopo. Se l'iPhone è in modalità silenzioso il tono può non suonare, ma il colore cambia comunque. Metti 0 in preparazione per partire subito. Il cronometro non tocca i dati della seduta.</p>
+  </section>
+  <button type="button" class="tm-pill" id="tmPill" data-phase="idle" hidden aria-label="Torna al cronometro"><span id="tmPillPhase"></span> <b id="tmPillNum"></b></button>
 
   <nav class="tabs" role="tablist" aria-label="Distretto" id="tabs"></nav>
 
@@ -1000,6 +1045,89 @@ $("#btnShare").addEventListener("click", async ()=>{
     $("#pdfMsg").textContent = "Qui la condivisione non è disponibile: usa Scarica PDF.";
   }
 });
+
+/* ---------- Cronometro: contrazione e riposo ----------
+   Indipendente dai dati della seduta. Il tempo si legge dall'orologio e non si conta a ogni tick,
+   così non va alla deriva e, se la pagina resta ferma per un attimo, si rimette in pari. */
+const TM = {phase:"idle", end:0, timer:null, ctx:null, lock:null, visible:true};
+const tmSecs = (sel, min, max, def) => { const n = num($(sel).value); return Number.isFinite(n) ? Math.min(max, Math.max(min, Math.round(n))) : def; };
+const tmPrepS = () => tmSecs("#tmPrep", 0, 30, 5);
+const tmWorkS = () => tmSecs("#tmWork", 1, 30, 5), tmRestS = () => tmSecs("#tmRest", 5, 300, 45);
+const TM_LABEL = {idle:"Pronto", prep:"Preparati", work:"Contrazione", rest:"Riposo"};
+
+/* Toni: WebAudio, avviato dal tocco sul pulsante (iOS non lo permette altrimenti) */
+function tmAudio(){
+  try{
+    if(navigator.audioSession) navigator.audioSession.type = "playback";
+    if(!TM.ctx) TM.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if(TM.ctx.state==="suspended") TM.ctx.resume();
+  }catch(e){}
+}
+function tmBeep(freq, dur, at){
+  const c = TM.ctx; if(!c) return;
+  try{
+    const t = c.currentTime + (at || 0), o = c.createOscillator(), g = c.createGain();
+    o.type = "sine"; o.frequency.value = freq;
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.5, t+0.01); g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
+    o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+dur+0.02);
+  }catch(e){}
+}
+/* Schermo acceso mentre il cronometro gira (dove il telefono lo permette) */
+async function tmWake(){
+  try{
+    if("wakeLock" in navigator && !TM.lock){
+      TM.lock = await navigator.wakeLock.request("screen");
+      TM.lock.addEventListener("release", ()=>{ TM.lock = null; });
+    }
+  }catch(e){}
+}
+function tmUnwake(){ try{ if(TM.lock) TM.lock.release(); }catch(e){} TM.lock = null; }
+document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible" && TM.phase!=="idle") tmWake(); });
+
+function tmDraw(){
+  const face = $("#tmFace"), run = TM.phase!=="idle";
+  const left = run ? Math.max(0, TM.end - performance.now()) : 0;
+  const total = (TM.phase==="prep" ? tmPrepS() : TM.phase==="work" ? tmWorkS() : tmRestS()) * 1000;
+  const n = run ? Math.ceil(left/1000) : tmWorkS();
+  face.dataset.phase = TM.phase;
+  $("#tmPhase").textContent = TM_LABEL[TM.phase];
+  $("#tmNum").textContent = n;
+  $("#tmBar").style.width = run ? Math.min(100, (1 - left/total) * 100) + "%" : "0";
+  const go = $("#tmGo"); go.textContent = run ? "Ferma" : "Avvia contrazione"; go.classList.toggle("primary", !run);
+  const pill = $("#tmPill");
+  pill.dataset.phase = TM.phase; pill.hidden = !run || TM.visible;
+  $("#tmPillPhase").textContent = TM_LABEL[TM.phase]; $("#tmPillNum").textContent = n;
+}
+function tmTick(){
+  const now = performance.now();
+  while(TM.phase!=="idle" && TM.end - now <= 0){
+    if(TM.phase==="prep"){ tmBeep(880, 0.3); TM.phase = "work"; TM.end += tmWorkS()*1000; }
+    else if(TM.phase==="work"){ tmBeep(660, 0.6); TM.phase = "rest"; TM.end += tmRestS()*1000; }
+    else { tmBeep(880, 0.15); tmBeep(880, 0.15, 0.28); tmStop(); return; }
+  }
+  if(TM.phase==="prep"){ const n = Math.ceil((TM.end - now)/1000); if(n!==TM.last && n<=3){ tmBeep(520, 0.12); } TM.last = n; }
+  tmDraw();
+}
+function tmStart(){
+  tmAudio(); TM.last = 0;
+  const prep = tmPrepS();
+  if(prep>0){ TM.phase = "prep"; TM.end = performance.now() + prep*1000; }
+  else { tmBeep(880, 0.3); TM.phase = "work"; TM.end = performance.now() + tmWorkS()*1000; }
+  if(!TM.timer) TM.timer = setInterval(tmTick, 100);
+  tmWake(); tmDraw();
+}
+function tmStop(){
+  clearInterval(TM.timer); TM.timer = null; TM.phase = "idle"; tmUnwake(); tmDraw();
+}
+$("#tmGo").addEventListener("click", ()=>{ TM.phase==="idle" ? tmStart() : tmStop(); });
+["#tmPrep","#tmWork","#tmRest"].forEach(sel=>$(sel).addEventListener("change", ()=>{
+  const w = $(sel); w.value = sel==="#tmPrep" ? tmPrepS() : sel==="#tmWork" ? tmWorkS() : tmRestS(); if(TM.phase==="idle") tmDraw();
+}));
+$("#tmWork").addEventListener("input", ()=>{ if(TM.phase==="idle") tmDraw(); });
+/* Quando il cronometro non si vede (stai inserendo le prove più in basso) compare una pastiglia con il tempo che resta */
+if("IntersectionObserver" in window) new IntersectionObserver(es=>{ TM.visible = es[0].isIntersecting; tmDraw(); }).observe($("#timer"));
+$("#tmPill").addEventListener("click", ()=>$("#timer").scrollIntoView({block:"center"}));
+tmDraw();
 
 /* App installabile: registra il service worker solo quando la pagina è servita da un sito (es. GitHub Pages) */
 if("serviceWorker" in navigator && location.protocol==="https:" && !location.hostname.endsWith("claude.ai") && !location.hostname.endsWith("claudeusercontent.com"))
