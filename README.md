@@ -7,7 +7,7 @@ Pagina web per la valutazione clinica della forza isometrica con dinamometro man
 - forza relativa (kgf/kg), LSI e deficit;
 - rapporti H:Q ed ER/IR.
 
-Ha anche un cronometro per le prove: contrazione (5 secondi) e riposo (45), modificabili, con toni a ogni fase e lo schermo che resta acceso. Non tocca i dati della seduta.
+Ha anche un cronometro per le prove: preparazione (5 secondi), contrazione (5) e riposo (45), modificabili, con toni a ogni fase e lo schermo che resta acceso. Non tocca i dati della seduta.
 
 Confronta i risultati con le soglie del manuale e con la letteratura e genera il PDF per l'atleta, da scaricare o condividere (WhatsApp, Mail, AirDrop).
 
